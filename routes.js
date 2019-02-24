@@ -35,7 +35,6 @@ module.exports = (app) => {
                 const xsrfToken = uuid();
                 const payload = {
                     id: user._id,
-                    email: user.email,
                     xsrfToken
                 };
 
@@ -44,7 +43,7 @@ module.exports = (app) => {
                 });
 
                 res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-                return res.status(200).send({ email, token, xsrfToken });
+                return res.status(200).send({ token, xsrfToken });
             });
         });
     });
@@ -52,7 +51,7 @@ module.exports = (app) => {
     // POST: log out a user
     app.post('/api/auth/logout', function (req, res) {
         res.clearCookie('jwt');
-        return res.status(200).send({ auth: false, token: null });
+        return res.status(200).send({ token: null });
     });
 
     // POST: create a new user
@@ -73,7 +72,6 @@ module.exports = (app) => {
             const xsrfToken = uuid();
             const payload = {
                 id: user._id,
-                email: user.email,
                 xsrfToken
             };
 
@@ -82,13 +80,13 @@ module.exports = (app) => {
             });
 
             res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-            return res.status(200).send({ email, token, xsrfToken });
+            return res.status(200).send({ token, xsrfToken });
         });
     });
 
     // GET: get a particular user
-    app.get('/api/users/:user_id', function (req, res) {
-        User.findById(req.params.user_id, { password: 0 }, function (err, user) {
+    app.get('/api/user', withAuth, function (req, res) {
+        User.findById(req.userId, { password: 0 }, function (err, user) {
             if (err) {
                 return res.status(500).send(err);
             }
@@ -127,17 +125,7 @@ module.exports = (app) => {
         });
     });
 
-    app.post('/verifyToken', withAuth, function (req, res) {
-        User.findById(req.userId, { password: 0 }, function (err, user) {
-            if (err) {
-                return res.status(500).send(err);
-            }
-
-            if (!user) {
-                return res.status(404).send('No user');
-            }
-
-            return res.status(200).send(user);
-        });
+    app.post('/api/auth/verify', withAuth, function (req, res) {
+        return res.status(200).send();
     });
 };

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import AuthService from './services/auth';
 
 class Login extends Component {
 
@@ -12,7 +13,7 @@ class Login extends Component {
     }
 
     componentWillMount () {
-        if (localStorage.getItem('jwt')) {
+        if (AuthService.isLoggedIn()) {
             this.props.history.push('/dashboard');
         }
     }
@@ -38,26 +39,11 @@ class Login extends Component {
         });
     }
 
-    onSubmit (event) {
-        event.preventDefault();
+    onSubmit (e) {
+        e.preventDefault();
 
-        fetch('/api/auth/login', {
-            method: 'POST',
-            body: JSON.stringify(this.state),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            if (res.status === 200) {
-                return res.json();
-            }
-
-            throw new Error(res.error);
-        }).then((json) => {
-            localStorage.setItem('xsrfToken', json.xsrfToken);
+        AuthService.login(this.state).then(() => {
             this.props.history.push('/dashboard');
-        }).catch((err) => {
-            window.console && window.console.error(err);
         });
     }
 }

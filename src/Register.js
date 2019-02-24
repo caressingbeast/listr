@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import AuthService from './services/auth';
 
 class Register extends Component {
 
@@ -9,6 +10,12 @@ class Register extends Component {
             email: '',
             password: ''
         };
+    }
+
+    componentWillMount () {
+        if (AuthService.isLoggedIn()) {
+            this.props.history.push('/dashboard');
+        }
     }
 
     render () {

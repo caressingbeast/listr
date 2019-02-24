@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import AuthService from './services/auth';
+import ApiHelper from './helpers/api';
 
 class Dashboard extends Component {
 
@@ -6,50 +8,47 @@ class Dashboard extends Component {
         super(props);
 
         this.state = {
-            firstName: 'stranger'
+            user: null
         };
     }
 
     componentWillMount () {
-        fetch('/verifyToken', {
-            method: 'POST',
-            credentials: 'same-origin',
+        if (!AuthService.isLoggedIn()) {
+            return this.props.history.push('/login');
+        }
+
+        const opts = {
+            url: '/api/user',
+            credentials: true,
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': localStorage.getItem('xsrfToken')
+                'X-CSRF-Token': AuthService.getToken()
             }
-        }).then((res) => {
-            if (res.status !== 200) {
-                return this.props.history.push('/login');
-            }
-        }).catch((err) => {
-            window.console && window.console.error(err);
+        };
+
+        ApiHelper.generateAsync(opts).then((user) => {
+            this.setState({ user });
         });
     }
 
     render () {
+        const user = this.state.user;
+
+        if (!user) {
+            return null;
+        }
+
         return (
             <div className="Dashboard">
-                <h1>Welcome, {this.state.firstName}!</h1>
+                <p>PROTECTED: Dashboard</p>
                 <button onClick={() => this.logout()}>Logout</button>
             </div>
         );
     }
 
     logout () {
-        fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            if (res.status === 200) {
-                this.props.history.push('/login');
-            }
-        }).catch((err) => {
-            window.console && window.console.error(err);
-        });   
+        AuthService.logout().then(() => {
+            this.props.history.push('/login');
+        });
     }
 }
 
