@@ -15,7 +15,8 @@ class Dashboard extends Component {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('xsrfToken')
             }
         }).then((res) => {
             if (res.status !== 200) {

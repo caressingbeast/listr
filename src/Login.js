@@ -49,10 +49,13 @@ class Login extends Component {
             }
         }).then((res) => {
             if (res.status === 200) {
-                this.props.history.push('/dashboard');
+                return res.json();
             }
 
             throw new Error(res.error);
+        }).then((json) => {
+            localStorage.setItem('xsrfToken', json.xsrfToken);
+            this.props.history.push('/dashboard');
         }).catch((err) => {
             window.console && window.console.error(err);
         });

@@ -5,6 +5,7 @@ module.exports = (app) => {
     const isProd = process.env.NODE_ENV === 'production';
     const jwt = require('jsonwebtoken');
     const secret = process.env.SECRET_KEY || config.secret;
+    const uuid = require('uuid/v4');
     const withAuth = require('./middleware');
 
     const User = require('./models/User.js');
@@ -31,11 +32,11 @@ module.exports = (app) => {
                     return res.status(401).json({ auth: false, token: null });
                 }
 
+                const xsrfToken = uuid();
                 const payload = {
                     id: user._id,
                     email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName
+                    xsrfToken
                 };
 
                 const token = jwt.sign(payload, secret, {
@@ -43,7 +44,7 @@ module.exports = (app) => {
                 });
 
                 res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-                return res.status(200).send({ email, token });
+                return res.status(200).send({ email, token, xsrfToken });
             });
         });
     });
@@ -69,9 +70,11 @@ module.exports = (app) => {
                 return res.status(500).send(err);
             }
 
+            const xsrfToken = uuid();
             const payload = {
                 id: user._id,
-                email: user.email
+                email: user.email,
+                xsrfToken
             };
 
             const token = jwt.sign(payload, secret, {
@@ -79,7 +82,7 @@ module.exports = (app) => {
             });
 
             res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-            return res.status(200).send({ email, token });
+            return res.status(200).send({ email, token, xsrfToken });
         });
     });
 
