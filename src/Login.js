@@ -50,10 +50,9 @@ class Login extends Component {
         }).then((res) => {
             if (res.status === 200) {
                 this.props.history.push('/dashboard');
-                return res.json();
             }
-        }).then((json) => {
-            localStorage.setItem('jwt', json.token);
+
+            throw new Error(res.error);
         }).catch((err) => {
             window.console && window.console.error(err);
         });

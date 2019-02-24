@@ -5,7 +5,7 @@ const config = require('./config.js');
 const secret = process.env.API_SECRET || config.secret;
 
 const withAuth = function (req, res, next) {
-    const token = req.headers['authorization'];
+    const token = req.cookies.jwt;
 
     if (!token) {
         return res.status(403).send('Invalid or missing token!');

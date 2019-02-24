@@ -2,7 +2,7 @@
 
 module.exports = (app) => {
     const config = require('./config.js');
-    const isProd = process.env.NODE_ENV = 'production';
+    const isProd = process.env.NODE_ENV === 'production';
     const jwt = require('jsonwebtoken');
     const secret = process.env.SECRET_KEY || config.secret;
     const withAuth = require('./middleware');
@@ -42,7 +42,7 @@ module.exports = (app) => {
                     expiresIn: '24h'
                 });
 
-                res.cookie('jwt', token, { domain: '127.0.0.1', httpOnly: true, secure: isProd });
+                res.cookie('jwt', token, { httpOnly: true, secure: isProd });
                 return res.status(200).send({ email, token });
             });
         });
@@ -50,6 +50,7 @@ module.exports = (app) => {
 
     // POST: log out a user
     app.post('/api/auth/logout', function (req, res) {
+        res.clearCookie('jwt');
         return res.status(200).send({ auth: false, token: null });
     });
 
