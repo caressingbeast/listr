@@ -25,6 +25,10 @@ class Dashboard extends Component {
 
             return res.json();
         }).then((json) => {
+            if (!json) {
+                return;
+            }
+            
             this.setState({ firstName: (json.firstName || 'stranger') });
         }).catch((err) => {
             window.console && window.console.error(err);
@@ -35,8 +39,14 @@ class Dashboard extends Component {
         return (
             <div className="Dashboard">
                 <h1>Welcome, {this.state.firstName}!</h1>
+                <button onClick={() => this.logout()}>Logout</button>
             </div>
         );
+    }
+
+    logout () {
+        localStorage.removeItem('jwt');
+        this.props.history.push('/login');
     }
 }
 

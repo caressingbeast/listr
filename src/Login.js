@@ -11,6 +11,12 @@ class Login extends Component {
         };
     }
 
+    componentWillMount () {
+        if (localStorage.getItem('jwt')) {
+            this.props.history.push('/dashboard');
+        }
+    }
+
     render () {
         return (
             <div className="login">
