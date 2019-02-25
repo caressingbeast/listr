@@ -9,6 +9,7 @@ module.exports = (app) => {
     const withAuth = require('./middleware');
 
     const User = require('./models/User.js');
+    const List = require('./models/List.js');
 
     // POST: log in a user
     app.post('/api/auth/login', function (req, res) {
@@ -57,11 +58,12 @@ module.exports = (app) => {
     // POST: create a new user
     app.post('/api/users', function (req, res) {
         const { email, password } = req.body;
-        const user = new User({ email, password });
 
         if (!email || !password) {
             return res.status(500).send('Invalid email or password.');
         }
+
+        const user = new User({ email, password });
 
         user.save(function (err) {
 
@@ -85,47 +87,93 @@ module.exports = (app) => {
     });
 
     // GET: get a particular user
-    app.get('/api/user', withAuth, function (req, res) {
+    app.get('/api/users', withAuth, function (req, res) {
         User.findById(req.userId, { password: 0 }, function (err, user) {
             if (err) {
                 return res.status(500).send(err);
             }
 
             if (!user) {
-                return res.status(404);
+                return res.status(404).send('Not Found');
             }
 
-            return res.status(200).send(user);
+            List.find({ created_by: req.userId }, function (err, lists) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+
+                const payload = {
+                    user,
+                    lists
+                };
+
+                return res.status(200).send(payload);
+            });
         });
     });
 
-    // DELETE: deletes a particular user
-    app.delete('/api/users/:user_id', withAuth, function (req, res) {
-        User.findByIdAndRemove(req.params.user_id, function (err, user) {
+    // POST: create a new list
+    app.post('/api/lists', withAuth, function (req, res) {
+        let { title } = req.body;
+
+        if (!title) {
+            return res.status(400).send('Invalid title!');
+        }
+
+        title = title.trim();
+
+        const list = new List({ title, created_by: req.userId });
+
+        list.save(function (err) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            if (!user) {
-                return res.status(404);
-            }
-
-            return res.status(200);
+            return res.status(200).send(list);
         });
     });
 
-    // PUT: updates a particular user
-    app.put('/api/users/:user_id', withAuth, function (req, res) {
-        User.findByIdAndUpdate(req.params.user_id, req.body, { new: true }, function (err, user) {
+    // GET: get a particular list
+    app.get('/api/lists/:list_id', withAuth, function (req, res) {
+        List.findById(req.params.list_id, function (err, list) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            return res.status(200).send(user);
+            if (!list) {
+                return res.status(404).send('Not Found');
+            }
+
+            return res.status(200).send(list);
+        });
+    });
+
+    // POST: create an item on a list
+    app.post('/api/lists/:list_id/items', withAuth, function (req, res) {
+        List.findByIdAndUpdate(req.params.list_id, {
+            $push: { items: { title: req.body.title } }
+        }, { new: true }, function (err, list) {
+            if (err) {
+                return res.error(500).send(err);
+            }
+
+            return res.status(200).send(list);
+        });
+    });
+
+    app.delete('/api/lists/:list_id/items/:item_id', withAuth, function (req, res) {
+        List.findByIdAndUpdate(req.params.list_id, {
+            $pull: { items: { _id: req.params.item_id } }
+        }, { new: true }, function (err, list) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            return res.status(200).send(list);
         });
     });
 
     app.post('/api/auth/verify', withAuth, function (req, res) {
-        return res.status(200).send();
+        return res.status(200).send({ id: req.userId });
     });
 };

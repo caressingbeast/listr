@@ -1,0 +1,42 @@
+html {
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
+    color: #505658;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+a {
+    cursor: pointer;
+    color: #00b0eb;
+    text-decoration: none;
+}
+
+p {
+    margin: 0 0 30px 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 30px 0;
+    line-height: 1.25;
+}
+
+button {
+    background: #00b0eb;
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+    display: inline-block;
+    font: inherit;
+    padding: 10px 15px;
+    color: #fff;
+    text-align: center;
+}
+
+.App {
+    padding: 10px;
+}

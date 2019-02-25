@@ -1,19 +1,17 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 
 import ApiHelper from './helpers/api';
 import AuthService from './services/auth';
 
-class Dashboard extends Component {
+class List extends Component {
 
     constructor (props) {
         super(props);
 
         this.state = {
-            lists: [],
+            list: null,
             showForm: false,
-            title: '',
-            user: null
+            title: ''
         };
     }
 
@@ -24,12 +22,12 @@ class Dashboard extends Component {
             token: AuthService.getToken()
         });
 
-        fetch('/api/users', opts).then((res) => {
+        fetch(`/api/lists/${this.props.match.params.list_id}`, opts).then((res) => {
             if (res.status === 200) {
                 return res.json();
             }
         }).then((json) => {
-            this.setState({ lists: json.lists, user: json.user });
+            this.setState({ list: json });
         }).catch((err) => {
             window.console && window.console.error(err);
         });
@@ -37,35 +35,25 @@ class Dashboard extends Component {
 
     render () {
         const state = this.state;
-        const user = state.user;
 
-        if (!user) {
+        if (!state.list) {
             return null;
         }
 
-        const lists = state.lists;
-
         return (
-            <div className="Dashboard">
-                <h1>My Lists</h1>
+            <div className="List">
+                <h1>{state.list.title}</h1>
                 <ul>
-                    {lists.map((l, i) => {
-                        let completed = l.items.filter((item) => {
-                            return item.completed;
-                        }).length;
-                        let total = l.items.length;
-
-                        let title = `${l.title}: ${completed} completed / ${total} total`;
-
+                    {state.list.items.map((item, i) => {
                         return (
-                            <li key={l._id} title={title}><Link to={`/lists/${l._id}`}>{l.title} ({total})</Link></li>
+                            <li key={i}>{item.title}<button onClick={() => this.deleteItem(item._id)}>Delete</button></li>
                         );
                     })}
                 </ul>
-                {!state.showForm && <button onClick={() => this.setState({ showForm: true })}>Create list</button>}
-                {state.showForm && 
-                    <form onSubmit={(e) => this.createList(e)}>
-                        <input type="text" placeholder="Enter a title for your list" value={state.title} onChange={(e) => this.handleInputChange(e)} />
+                {!state.showForm && <button onClick={() => this.setState({ showForm: true })}>Add item</button>}
+                {state.showForm &&
+                    <form onSubmit={(e) => this.addItem(e)}>
+                        <input type="text" placeholder="Enter item" value={state.title} onChange={(e) => this.handleInputChange(e)} />
                         <button type="submit">Save</button>
                         <button onClick={() => this.setState({ showForm: false, title: '' })}>Cancel</button>
                     </form>
@@ -74,10 +62,10 @@ class Dashboard extends Component {
         );
     }
 
-    createList (e) {
+    addItem (e) {
         e.preventDefault();
 
-        let state = this.state;
+        const state = this.state;
 
         if (!state.title) {
             return false;
@@ -86,19 +74,34 @@ class Dashboard extends Component {
         const opts = ApiHelper.generateOpts({
             body: { title: state.title },
             credentials: true,
+            method: 'POST',
             token: AuthService.getToken()
         });
 
-        fetch('/api/lists', opts).then((res) => {
+        fetch(`/api/lists/${this.props.match.params.list_id}/items`, opts).then((res) => {
             if (res.status === 200) {
                 return res.json();
             }
         }).then((json) => {
-            let lists = state.lists;
+            this.setState({ list: json, showForm: false, title: '' });
+        }).catch((err) => {
+            window.console && window.console.error(err);
+        });
+    }
 
-            lists.push(json);
+    deleteItem (itemId) {
+        const opts = ApiHelper.generateOpts({
+            credentials: true,
+            method: 'DELETE',
+            token: AuthService.getToken()
+        });
 
-            this.setState({ lists, showForm: false });
+        fetch(`/api/lists/${this.props.match.params.list_id}/items/${itemId}`, opts).then((res) => {
+            if (res.status === 200) {
+                return res.json();
+            }
+        }).then((json) => {
+            this.setState({ list: json });
         }).catch((err) => {
             window.console && window.console.error(err);
         });
@@ -109,4 +112,4 @@ class Dashboard extends Component {
     }
 }
 
-export default Dashboard;
+export default List;

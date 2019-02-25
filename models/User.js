@@ -13,11 +13,11 @@ const UserSchema = new mongoose.Schema({
         trim: true,
         unique: true
     },
-    firstName: {
+    first_name: {
         type: String,
         trim: true
     },
-    lastName: {
+    last_name: {
         type: String,
         trim: true
     },
@@ -25,8 +25,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    lists: [],
-    createdAt: {
+    created_at: {
         type: Date,
         default: Date.now
     }

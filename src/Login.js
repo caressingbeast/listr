@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+
+import ApiHelper from './helpers/api';
 import AuthService from './services/auth';
 
 class Login extends Component {
@@ -42,8 +44,20 @@ class Login extends Component {
     onSubmit (e) {
         e.preventDefault();
 
-        AuthService.login(this.state).then(() => {
+        const opts = ApiHelper.generateOpts({
+            body: this.state,
+            credentials: true
+        });
+
+        fetch('/api/auth/login', opts).then((res) => {
+            if (res.status === 200) {
+                return res.json();
+            }
+        }).then((json) => {
+            localStorage.setItem('x_token', json.xsrfToken);
             this.props.history.push('/dashboard');
+        }).catch((err) => {
+            window.console && window.console.error(err);
         });
     }
 }
