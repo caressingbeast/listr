@@ -1,1 +1,245 @@
+*, *:after, *:before {
+    box-sizing: border-box;
+}
 
+html {
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
+    padding: 10px;
+    color: #505658;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+a {
+    cursor: pointer;
+    color: #00b0eb;
+    text-decoration: none;
+}
+
+p {
+    margin: 0 0 30px 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 30px 0;
+    color: #000;
+    line-height: 1.25;
+}
+
+hr {
+    border: solid #cdd3d5;
+    border-width: 1px 0 0 0;
+    margin: 30px 0;
+}
+
+h1 {
+    font-size: 36px;
+}
+
+h2 {
+    font-size: 30px;
+}
+
+ul, ol {
+    margin: 0 0 30px 0;
+    padding: 0 0 0 30px;
+}
+
+ul li {
+    list-style: disc;
+}
+
+ul.list-unstyled {
+    padding: 0;
+}
+
+ul.list-inline li {
+    display: inline-block;
+}
+
+.text-muted {
+    color: #888 !important;
+    font-size: 60%;
+    font-weight: 400;
+}
+
+button, .button {
+    background: #00b0eb;
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+    display: inline-block;
+    font: inherit;
+    padding: 10px 15px;
+    color: #fff;
+    text-align: center;
+}
+
+button[type="submit"] {
+    background: #44bb70;
+}
+
+button.caution {
+    background: none;
+    color: #e60045;
+    text-decoration: underline;
+}
+
+button.link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #00b0eb;
+}
+
+.neutral,
+button.neutral {
+    background: #09ecec;
+    color: #262a2c;
+}
+
+button.outlined {
+    background: none;
+    border-color: #44bb70;
+    border-style: solid;
+    border-width: 2px;
+    padding: 8px 15px;
+    color: #44bb70;
+}
+
+button.warning {
+    background: #e60045;
+}
+
+.small,
+button.small {
+    padding: 5px 8px;
+    font-size: 11px;
+}
+
+.button-group button,
+.button-group .button {
+    border: 1px solid #008dbc;
+    border-radius: 0;
+    margin: 0 -1px 0 0;
+}
+
+.button-group button:first-child,
+.button-group .button:first-child {
+    border-radius: 3px 0 0 3px;
+}
+
+.button-group button:last-child,
+.button-group .button:last-child {
+    border-radius: 0 3px 3px 0;
+}
+
+fieldset {
+    border: 1px solid #cdd3d5;
+    border-radius: 3px;
+    padding: 30px;
+    margin: 0 0 30px 0;
+}
+
+legend {
+    padding: 0 15px;
+    color: #000;
+    font-size: 22px;
+}
+
+.form-input {
+    border: 1px solid #cdd3d5;
+    border-radius: 3px;
+    display: block;
+    margin: 0 0 15px 0;
+    padding: 10px;
+    width: 100%;
+}
+
+input, select, textarea {
+    margin: 0;
+    color: inherit;
+    font: inherit;
+}
+
+input[type="checkbox"] {
+    box-sizing: border-box;
+    display: inline-block;
+    margin: 0 10px 0 0;
+    padding: 0;
+}
+
+.message {
+    background: #e5f9ff;
+    margin: 0 0 10px 0;
+    padding: 15px;
+    color: #00b0eb;
+}
+
+.message-error {
+    background: #ffe5ed;
+    color: #e60045;
+}
+
+.message-success {
+    background: #e8f7ee;
+    color: #44bb70;
+}
+
+.list-container {
+    border: 1px solid #cdd3d5;
+    border-radius: 3px;
+    list-style: none;
+    margin: 0 0 30px 0;
+    padding: 0;
+}
+
+.list-container li {
+    border-bottom: 1px solid #cdd3d5;
+    margin: 0;
+    overflow: hidden;
+    padding: 10px;
+    width: 100%;
+}
+
+.list-container li span.right {
+    float: right;
+}
+
+.list-container li:last-child {
+    border: none;
+}
+
+.list-container button {
+    float: right;
+}
+
+.Dashboard .list-container a {
+    display: block;
+}
+
+.button-container {
+    overflow: hidden;
+}
+
+.button-container button {
+    margin: 0 15px 0 0;
+}
+
+.pull-right {
+    float: right;
+}
+
+.button-container button.pull-right {
+    margin: 0;
+}
+
+.completed-true {
+    color: #848d90;
+    text-decoration: line-through;
+}

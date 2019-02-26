@@ -17,22 +17,25 @@ function PrivateRoute (ComponentToProtect) {
             };
         }
 
-        componentDidMount () {
+        async componentDidMount () {
             const opts = ApiHelper.generateOpts({
                 credentials: true,
                 token: AuthService.getToken()
             });
     
-            fetch('/api/auth/verify', opts).then((res) => {
-                if (res.status === 200) {
-                    return this.setState({ loading: false });
+            let success = await fetch('/api/auth/verify', opts).then((res) => {
+                if (res.ok) {
+                    return res;
                 }
 
-                return this.setState({ loading: false, redirect: true });
-            }).catch((err) => {
-                this.setState({ loading: false, redirect: true });
-                window.console && window.console.error(err);
+                return null;
             });
+
+            if (success) {
+                return this.setState({ loading: false });
+            }
+
+            return this.setState({ loading: false, redirect: true });
         }
 
         render () {
@@ -43,7 +46,12 @@ function PrivateRoute (ComponentToProtect) {
             }
 
             if (redirect) {
-                return (<Redirect to="/login" />);
+                return (
+                    <Redirect to={{
+                        pathname: '/login',
+                        state: { from: this.props.location }
+                    }} />
+                );
             }
 
             return (

@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 import Dashboard from './Dashboard';
 import Home from './Home';
 import List from './List';
 import Login from './Login';
+import Nav from './Nav';
+import Profile from './Profile';
 import Register from './Register';
 
 import PrivateRoute from './PrivateRoute';
@@ -17,7 +19,7 @@ class App extends Component {
         return (
             <Router>
                 <div className="App">
-                    {this.renderNav()}
+                    <Nav />
 
                     <Route path="/" exact component={Home} />
                     <Route path="/login" component={Login} />
@@ -25,19 +27,13 @@ class App extends Component {
 
                     <Route path="/dashboard" component={PrivateRoute(Dashboard)} />
                     <Route path="/lists/:list_id" component={PrivateRoute(List)} />
+                    <Route path="/profile" component={PrivateRoute(Profile)} />
+
+                    <div className="Footer">
+                        <small>made by <a href="https://github.com/caressingbeast/listr" rel="nofollow">caressingbeast</a></small>
+                    </div>
                 </div>
             </Router>
-        );
-    }
-
-    renderNav () {
-        return (
-            <ul>
-                <li key="home"><Link to="/">Home</Link></li>
-                <li><Link to="/login">Login</Link></li>
-                <li><Link to="/register">Register</Link></li>
-                <li><Link to="/dashboard">Dashboard</Link></li>
-            </ul>
         );
     }
 }

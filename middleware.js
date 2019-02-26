@@ -2,18 +2,18 @@
 
 const jwt = require('jsonwebtoken');
 const config = require('./config.js');
-const secret = process.env.API_SECRET || config.secret;
+const secret = process.env.SECRET_KEY || config.secret;
 
 const withAuth = function (req, res, next) {
     const token = req.cookies.jwt;
-    const xsrfToken = req.headers['x-csrf-token'];
+    const xsrfToken = req.headers['listr-csrf-token'];
 
     if (!token) {
-        return res.status(403).send('Invalid token!');
+        return res.status(403).send('Invalid token');
     }
 
     if (!xsrfToken) {
-        return res.status(403).send('Invalid CSRF token!');
+        return res.status(403).send('Invalid CSRF token');
     }
 
     jwt.verify(token, secret, function (err, decoded) {
@@ -22,10 +22,10 @@ const withAuth = function (req, res, next) {
         }
 
         if (decoded.xsrfToken !== xsrfToken) {
-            return res.status(403).send('Invalid CSRF token!');
+            return res.status(403).send('Invalid CSRF token');
         }
 
-        req.userId = decoded.id;
+        req.userId = decoded.sub;
 
         return next();
     });

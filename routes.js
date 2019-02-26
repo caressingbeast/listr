@@ -8,34 +8,37 @@ module.exports = (app) => {
     const uuid = require('uuid/v4');
     const withAuth = require('./middleware');
 
-    const User = require('./models/User.js');
     const List = require('./models/List.js');
+    const User = require('./models/User.js');
 
     // POST: log in a user
     app.post('/api/auth/login', function (req, res) {
         const { email, password } = req.body;
 
-        User.findOne({ email }, function (err, user) {
+        // find the user (explicitly include password)
+        User.findOne({ email }).select('+password').exec(function (err, user) {
+
             if (err) {
                 return res.status(500).send(err);
             }
 
             if (!user) {
-                return res.status(404).send(err);
+                return res.status(404).send('Not Found');
             }
 
             user.isCorrectPassword(password, function (err, success) {
+
                 if (err) {
                     return res.status(500).send(err);
                 }
 
                 if (!success) {
-                    return res.status(401).json({ auth: false, token: null });
+                    return res.status(401).json({ token: null, xsrfToken: null });
                 }
 
                 const xsrfToken = uuid();
                 const payload = {
-                    id: user._id,
+                    sub: user.id,
                     xsrfToken
                 };
 
@@ -44,7 +47,7 @@ module.exports = (app) => {
                 });
 
                 res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-                return res.status(200).send({ token, xsrfToken });
+                return res.status(200).json({ id: payload.sub, token, xsrfToken });
             });
         });
     });
@@ -55,12 +58,12 @@ module.exports = (app) => {
         return res.status(200).send({ token: null });
     });
 
-    // POST: create a new user
+    // POST: create a user
     app.post('/api/users', function (req, res) {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(500).send('Invalid email or password.');
+            return res.status(500).send('Invalid');
         }
 
         const user = new User({ email, password });
@@ -73,7 +76,7 @@ module.exports = (app) => {
 
             const xsrfToken = uuid();
             const payload = {
-                id: user._id,
+                sub: user.id,
                 xsrfToken
             };
 
@@ -82,32 +85,61 @@ module.exports = (app) => {
             });
 
             res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-            return res.status(200).send({ token, xsrfToken });
+            return res.status(200).send({ id: payload.sub, token, xsrfToken });
         });
     });
 
-    // GET: get a particular user
-    app.get('/api/users', withAuth, function (req, res) {
-        User.findById(req.userId, { password: 0 }, function (err, user) {
+    // GET: get a user
+    app.get('/api/users/:user_id', withAuth, function (req, res) {
+        User.findById(req.params.user_id, function (err, user) {
             if (err) {
                 return res.status(500).send(err);
             }
 
             if (!user) {
-                return res.status(404).send('Not Found');
+                return res.status(404);
             }
 
-            List.find({ created_by: req.userId }, function (err, lists) {
-                if (err) {
-                    return res.status(500).send(err);
+            return res.status(200).json(user);
+        });
+    });
+
+    // PUT: update a user
+    app.put('/api/users/:user_id', withAuth, function (req, res) {
+        User.findById(req.params.user_id, function (err, user) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            const { email, firstName, lastName } = req.body;
+
+            user.email = email;
+            user.firstName = firstName;
+            user.lastName = lastName;
+
+            user.save(function (saveErr, updatedUser) {
+                if (saveErr) {
+                    return res.status(500).send(saveErr);
                 }
 
-                const payload = {
-                    user,
-                    lists
-                };
+                return res.status(200).send(updatedUser);
+            });
+        });
+    });
 
-                return res.status(200).send(payload);
+    // DELETE: delete a user
+    app.delete('/api/users/:user_id', withAuth, function (req, res) {
+        User.findById(req.params.user_id, function (err, user) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            User.remove(function (saveErr, removedUser) {
+                if (saveErr) {
+                    return res.status(500).send(saveErr);
+                }
+                
+                return res.status(200).json(removedUser);
             });
         });
     });
@@ -133,46 +165,206 @@ module.exports = (app) => {
         });
     });
 
-    // GET: get a particular list
+    // GET: get all lists for a user
+    app.get('/api/lists', withAuth, function (req, res) {
+        List.find({ created_by: req.userId }, function (err, lists) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            List.find({ shared_users: req.userId }, function (err, sharedLists) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+
+                const payload = {
+                    lists,
+                    sharedLists
+                };
+
+                return res.status(200).send(payload);
+            });
+        });
+    });
+
+    // GET: get a list
     app.get('/api/lists/:list_id', withAuth, function (req, res) {
+        List.findById(req.params.list_id)
+            .populate('shared_users')
+            .exec(function (err, list) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+
+                if (!list) {
+                    return res.status(404).send('Not Found');
+                }
+
+                return res.status(200).send(list);
+            });
+    });
+
+    // DELETE: delete a list
+    app.delete('/api/lists/:list_id', withAuth, function (req, res) {
         List.findById(req.params.list_id, function (err, list) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            if (!list) {
-                return res.status(404).send('Not Found');
+            // only the creator can delete a list
+            if (list.created_by.toString() !== req.userId) {
+                return res.status(401).send('Unauthorized');
             }
 
-            return res.status(200).send(list);
+            list.remove(function (saveErr, removedList) {
+                if (saveErr) {
+                    return res.status(500).send(saveErr);
+                }
+
+                return res.status(200).send(removedList);
+            });
         });
     });
 
     // POST: create an item on a list
     app.post('/api/lists/:list_id/items', withAuth, function (req, res) {
-        List.findByIdAndUpdate(req.params.list_id, {
-            $push: { items: { title: req.body.title } }
-        }, { new: true }, function (err, list) {
-            if (err) {
-                return res.error(500).send(err);
-            }
+        List.findById(req.params.list_id)
+            .populate('shared_users')
+            .exec(function (err, list) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
 
-            return res.status(200).send(list);
-        });
+                // push the item
+                list.items.push({
+                    title: req.body.title
+                });
+
+                // save the list
+                list.save(function (saveErr, updatedList) {
+                    if (saveErr) {
+                        return res.error(500).send(saveErr);
+                    }
+        
+                    return res.status(200).send(updatedList);
+                });
+            });
     });
 
+    // DELETE: delete an item on a list
     app.delete('/api/lists/:list_id/items/:item_id', withAuth, function (req, res) {
-        List.findByIdAndUpdate(req.params.list_id, {
-            $pull: { items: { _id: req.params.item_id } }
-        }, { new: true }, function (err, list) {
+        List.findById(req.params.list_id)
+            .populate('shared_users')
+            .exec(function (err, list) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+
+                // pull the item
+                list.items.pull({ _id: req.params.item_id });
+
+                // save the list
+                list.save(function (saveErr, updatedList) {
+                    if (saveErr) {
+                        return res.status(500).send(saveErr);
+                    }
+
+                    return res.status(200).send(updatedList);
+                });
+            });
+    });
+
+    // PUT: update an item on a list
+    app.put('/api/lists/:list_id/items/:item_id', withAuth, function (req, res) {
+        List.findById(req.params.list_id)
+            .populate('shared_users')
+            .exec(function (err, list) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+
+                // get and update the item
+                let item = list.items.find(function (i) {
+                    return i.id === req.params.item_id;
+                });
+
+                item.completed = req.body.completed;
+
+                // save the list
+                list.save(function (saveErr, updatedList) {
+                    if (saveErr) {
+                        return res.status(500).send(saveErr);
+                    }
+
+                    return res.status(200).send(updatedList);
+                });
+            });
+    });
+
+    // POST: share a list
+    app.post('/api/lists/:list_id/shared', withAuth, function (req, res) {
+        List.findById(req.params.list_id, function (err, list) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            return res.status(200).send(list);
+            // only the creator can share a list
+            if (list.created_by.toString() !== req.userId) {
+                return res.status(401).send('Unauthorized');
+            }
+
+            // lowercase and trim
+            const email = req.body.email.toLowerCase().trim();
+
+            User.findOne({ email }, function (userErr, user) {
+                if (userErr) {
+                    return res.status(500).send(userErr);
+                }
+
+                // if no user found, make the front-end think all is okay
+                if (!user) {
+                    return res.status(204).send('No Content');
+                }
+
+                list.shared_users.push(user);
+
+                list.save(function (saveErr, updatedList) {
+                    if (saveErr) {
+                        return res.status(500).send(saveErr);
+                    }
+
+                    return res.status(200).send(updatedList);
+                });
+            });
         });
     });
 
+    // DELETE: unshare a list 
+    app.delete('/api/lists/:list_id/shared', function (req, res) {
+        List.findById(req.params.list_id)
+            .populate('shared_users')
+            .exec(function (err, list) {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+
+                if (!list) {
+                    return res.status(404).send('Not Found');
+                }
+
+                list.shared_users.pull(req.body.id);
+
+                list.save(function (saveErr, updatedList) {
+                    if (saveErr) {
+                        return res.status(500).send(saveErr);
+                    }
+
+                    return res.status(200).json(updatedList);
+                });
+            });
+    });
+
+    // POST: verify a JWT
     app.post('/api/auth/verify', withAuth, function (req, res) {
         return res.status(200).send({ id: req.userId });
     });

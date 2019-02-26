@@ -10,29 +10,39 @@ class Dashboard extends Component {
         super(props);
 
         this.state = {
+            error: false,
             lists: [],
+            sharedLists: [],
             showForm: false,
             title: '',
             user: null
         };
     }
 
-    componentDidMount () {
+    async componentDidMount () {
+        const user = await AuthService.fetchUser();
+
         const opts = ApiHelper.generateOpts({
             credentials: true,
             method: 'GET',
             token: AuthService.getToken()
         });
 
-        fetch('/api/users', opts).then((res) => {
-            if (res.status === 200) {
+        const listData = await fetch('/api/lists', opts).then((res) => {
+            if (res.ok) {
                 return res.json();
             }
-        }).then((json) => {
-            this.setState({ lists: json.lists, user: json.user });
-        }).catch((err) => {
-            window.console && window.console.error(err);
+
+            return null;
         });
+
+        if (listData) {
+            this.setState({
+                lists: listData.lists,
+                sharedLists: listData.sharedLists,
+                user
+            });
+        }
     }
 
     render () {
@@ -44,31 +54,56 @@ class Dashboard extends Component {
         }
 
         const lists = state.lists;
+        const sharedLists = state.sharedLists;
 
         return (
             <div className="Dashboard">
-                <h1>My Lists</h1>
-                <ul>
-                    {lists.map((l, i) => {
-                        let completed = l.items.filter((item) => {
-                            return item.completed;
-                        }).length;
-                        let total = l.items.length;
-
-                        let title = `${l.title}: ${completed} completed / ${total} total`;
-
-                        return (
-                            <li key={l._id} title={title}><Link to={`/lists/${l._id}`}>{l.title} ({total})</Link></li>
-                        );
-                    })}
-                </ul>
+                <h1>{user.firstName ? `${user.firstName}'s Lists` : 'My Lists'}</h1>
+                {lists.length === 0 && <p>You currently have no lists. Click <strong>Create list</strong> below to add one.</p>}
+                {lists.length > 0 && 
+                    <ul className="list-container">
+                        {lists.map((l, i) => {
+                            return (
+                                <li key={l._id}>
+                                    <Link to={`/lists/${l._id}`}>
+                                        <span>{l.title} ({l.items.length})</span>
+                                        {l.shared_users.length > 0 && <small className="button neutral small pull-right">shared</small>}
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                }
                 {!state.showForm && <button onClick={() => this.setState({ showForm: true })}>Create list</button>}
                 {state.showForm && 
                     <form onSubmit={(e) => this.createList(e)}>
-                        <input type="text" placeholder="Enter a title for your list" value={state.title} onChange={(e) => this.handleInputChange(e)} />
-                        <button type="submit">Save</button>
-                        <button onClick={() => this.setState({ showForm: false, title: '' })}>Cancel</button>
+                        <fieldset>
+                            <legend>Create list</legend>
+                            {state.error && 
+                                <div className="message message-error">You must enter a title for your list.</div>
+                            }
+                            <input className="form-input" type="text" placeholder="Enter a title for your list" value={state.title} onChange={(e) => this.handleInputChange(e)} />
+                            <button type="submit">Save</button>
+                            <button className="caution" onClick={() => this.setState({ error: false, showForm: false, title: '' })}>Cancel</button>
+                        </fieldset>
                     </form>
+                }
+                {sharedLists.length > 0 &&
+                    <React.Fragment>
+                        <hr />
+                        <h2>Shared Lists</h2>
+                        <ul className="list-container">
+                            {sharedLists.map((l, i) => {
+                                return (
+                                    <li key={l._id}>
+                                        <Link to={`/lists/${l._id}`}>
+                                            <span>{l.title} ({l.items.length})</span>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </React.Fragment>
                 }
             </div>
         );
@@ -80,6 +115,7 @@ class Dashboard extends Component {
         let state = this.state;
 
         if (!state.title) {
+            this.setState({ error: true });
             return false;
         }
 
@@ -105,7 +141,14 @@ class Dashboard extends Component {
     }
 
     handleInputChange (e) {
-        this.setState({ title: e.target.value });
+        let formError = this.state.error;
+        let title = e.target.value;
+
+        if (formError && title) {
+            formError = false;
+        }
+
+        this.setState({ error: formError, title });
     }
 }
 

@@ -14,12 +14,16 @@
     "express": "^4.16.4",
     "express-session": "^1.15.6",
     "helmet": "^3.15.1",
+    "immutable": "^4.0.0-rc.12",
     "jsonwebtoken": "^8.5.0",
     "mongoose": "^5.4.15",
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
+    "react-redux": "^6.0.1",
+    "react-router": "^4.3.1",
     "react-router-dom": "^4.3.1",
     "react-scripts": "2.1.5",
+    "redux": "^4.0.1",
     "uuid": "^3.3.2"
   },
   "scripts": {

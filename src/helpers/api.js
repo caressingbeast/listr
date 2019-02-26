@@ -23,7 +23,7 @@ class ApiHelper {
         }
 
         if (opts.token) {
-            returnOpts.headers['X-CSRF-Token'] = opts.token;
+            returnOpts.headers['Listr-CSRF-Token'] = opts.token;
         }
 
         return returnOpts;

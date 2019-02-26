@@ -24,10 +24,12 @@ class Login extends Component {
         return (
             <div className="login">
                 <form onSubmit={(e) => this.onSubmit(e)}>
-                    <h1>Login</h1>
-                    <input type="email" name="email" placeholder="Email address" value={this.state.email} onChange={(e) => this.handleInputChange(e)} required></input>
-                    <input type="password" name="password" placeholder="Password" value={this.state.password} onChange={(e) => this.handleInputChange(e)} required></input>
-                    <button type="submit">Login</button>
+                    <fieldset>
+                        <legend>Login</legend>
+                        <input className="form-input" type="email" name="email" placeholder="Email address" value={this.state.email} onChange={(e) => this.handleInputChange(e)} required></input>
+                        <input className="form-input" type="password" name="password" placeholder="Password" value={this.state.password} onChange={(e) => this.handleInputChange(e)} required></input>
+                        <button type="submit">Login</button>
+                    </fieldset>   
                 </form>
             </div>
         );
@@ -54,8 +56,12 @@ class Login extends Component {
                 return res.json();
             }
         }).then((json) => {
-            localStorage.setItem('x_token', json.xsrfToken);
-            this.props.history.push('/dashboard');
+            AuthService.setToken(json.xsrfToken);
+            AuthService.setUser(json.id);
+
+            const { from } = this.props.location.state || { from: { pathname: '/dashboard' } };
+
+            this.props.history.push(from);
         }).catch((err) => {
             window.console && window.console.error(err);
         });
