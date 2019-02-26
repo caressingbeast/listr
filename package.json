@@ -18,5 +18,11 @@
     "scripts": {
         "start": "node server.js",
         "heroku-postbuild": "cd client && npm install && npm run build"
+    },
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "mocha": "^6.0.2",
+        "sinon": "^7.2.4",
+        "supertest": "^3.4.2"
     }
 }

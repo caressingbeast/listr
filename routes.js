@@ -1,9 +1,10 @@
 // routes.js
 
 module.exports = (app) => {
+    const config = require('./configuration.js');
     const isProd = process.env.NODE_ENV === 'production';
     const jwt = require('jsonwebtoken');
-    const secret = process.env.SECRET_KEY;
+    const secret = config.SECRET_KEY;
     const uuid = require('uuid/v4');
     const withAuth = require('./middleware');
 
