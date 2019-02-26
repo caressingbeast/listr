@@ -1,6 +1,6 @@
 # Listr
 
-This is a fancier version of my [existing grocery list app](https://github.com/caressingbeast/grocery-list). This one was built using Express and MongoDB on the backend and React on the frontend. It uses JWT tokens for authentication. I know I could've just used existing session authentication, but I wanted to play around with JWTs. This was also my first time building an authentication system in Node.
+This is a fancier version of my [existing grocery list app](https://github.com/caressingbeast/grocery-list). This one was built using Express and MongoDB on the backend and React on the frontend, deployed to Heroku. It uses JWT tokens for authentication. I know I could've just used existing session authentication, but I wanted to play around with JWTs. This was also my first time building an authentication system in Node.
 
 ## Authentication
 
