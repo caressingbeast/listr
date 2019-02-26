@@ -15,9 +15,12 @@ module.exports = (app) => {
     app.post('/api/auth/login', function (req, res) {
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(400).send('Bad Request');
+        }
+
         // find the user (explicitly include password)
         User.findOne({ email }).select('+password').exec(function (err, user) {
-
             if (err) {
                 return res.status(500).send(err);
             }
@@ -27,7 +30,6 @@ module.exports = (app) => {
             }
 
             user.isCorrectPassword(password, function (err, success) {
-
                 if (err) {
                     return res.status(500).send(err);
                 }
@@ -55,21 +57,21 @@ module.exports = (app) => {
     // POST: log out a user
     app.post('/api/auth/logout', function (req, res) {
         res.clearCookie('jwt');
-        return res.status(200).send({ token: null });
+        return res.status(200).send({ token: null, xsrfToken: null });
     });
 
     // POST: create a user
     app.post('/api/users', function (req, res) {
-        const { email, password } = req.body;
+        const body = req.body;
 
-        if (!email || !password) {
-            return res.status(500).send('Invalid');
+        // all fields are required
+        if (!body.email || !body.firstName || !body.lastName || !body.password) {
+            return res.status(400).send('Bad Request');
         }
 
-        const user = new User({ email, password });
+        const user = new User(body);
 
         user.save(function (err) {
-
             if (err) {
                 return res.status(500).send(err);
             }
@@ -84,8 +86,12 @@ module.exports = (app) => {
                 expiresIn: '24h'
             });
 
+            // remove the password
+            const objUser = user.toObject();
+            delete objUser.password;
+
             res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-            return res.status(200).send({ id: payload.sub, token, xsrfToken });
+            return res.status(201).send({ id: payload.sub, token, user: objUser, xsrfToken });
         });
     });
 
@@ -97,7 +103,7 @@ module.exports = (app) => {
             }
 
             if (!user) {
-                return res.status(404);
+                return res.status(404).send('Not Found');
             }
 
             return res.status(200).json(user);
@@ -134,7 +140,7 @@ module.exports = (app) => {
                 return res.status(500).send(err);
             }
 
-            User.remove(function (saveErr, removedUser) {
+            user.remove(function (saveErr, removedUser) {
                 if (saveErr) {
                     return res.status(500).send(saveErr);
                 }

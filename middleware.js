@@ -9,11 +9,11 @@ const withAuth = function (req, res, next) {
     const xsrfToken = req.headers['listr-csrf-token'];
 
     if (!token) {
-        return res.status(403).send('Invalid token');
+        return res.status(401).send('Unauthorized');
     }
 
     if (!xsrfToken) {
-        return res.status(403).send('Invalid CSRF token');
+        return res.status(401).send('Unauthorized');
     }
 
     jwt.verify(token, secret, function (err, decoded) {
@@ -22,7 +22,7 @@ const withAuth = function (req, res, next) {
         }
 
         if (decoded.xsrfToken !== xsrfToken) {
-            return res.status(403).send('Invalid CSRF token');
+            return res.status(401).send('Unauthorized');
         }
 
         req.userId = decoded.sub;

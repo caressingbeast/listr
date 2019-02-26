@@ -37,10 +37,14 @@ UserSchema.pre('save', function (next) {
 
     // lowercase and trim
     user.email = user.email.toLowerCase().trim();
+    user.firstName = user.firstName.trim();
+    user.lastName = user.lastName.trim();
 
     if (!user.isModified('password')) {
         return next();
     }
+
+    user.password = user.password.trim();
     
     return bcrypt.hash(user.password, SALT_ROUNDS, function (err, hashedPassword) {
         if (err) {
