@@ -1,5 +1,13 @@
+.App {
+    display: block;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    padding: 15px 15px 69px 15px;
+}
+
 .Footer {
-    position: absolute; bottom: 20px;
+    position: absolute; bottom: 15px;
     width: 100%;
     text-align: center;
 }

@@ -7,8 +7,8 @@ html {
 }
 
 body {
+    margin: 0;
     min-height: 100%;
-    padding: 10px;
     color: #505658;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 16px;
