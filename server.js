@@ -6,8 +6,6 @@ const cors = require('cors');
 const express = require('express');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
-const session = require('express-session');
-const MongoStore = require('connect-mongo')(session);
 
 const config = require('./config.js');
 
@@ -25,25 +23,6 @@ mongoose.connect(mongoUrl, { useCreateIndex: true, useNewUrlParser: true }, (err
         throw err;
     }
 });
-
-// const db = mongoose.connection;
-
-// app.use(session({
-//     key: 'user_sid',
-//     name: 'id',
-//     resave: false,
-//     saveUninitialized: true,
-//     secret: process.env.SECRET_KEY || config.secret,
-//     store: new MongoStore({ 
-//         mongooseConnection: db,
-//         ttl: 3600 * 2 // 2 hours
-//     }),
-//     cookie: {
-//         httpOnly: true,
-//         path: '/',
-//         secure: process.env.NODE_ENV === 'production'
-//     }
-// }));
 
 require('./routes.js')(app);
 
