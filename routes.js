@@ -117,7 +117,21 @@ module.exports = (app) => {
                 return res.status(500).send(err);
             }
 
+            if (!user) {
+                return res.status(404).send('Not Found');
+            }
+
+            // restrict to same user
+            if (req.params.user_id !== req.userId) {
+                return res.status(401).send('Unauthorized');
+            }
+
             const { email, firstName, lastName } = req.body;
+
+            // all fields are required
+            if (!email || !firstName || !lastName) {
+                return res.status(400).send('Bad Request');
+            }
 
             user.email = email;
             user.firstName = firstName;
