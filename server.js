@@ -7,8 +7,6 @@ const express = require('express');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
 
-const config = require('./config.js');
-
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -17,7 +15,7 @@ app.use(cookieParser());
 app.use(cors());
 app.use(helmet());
 
-const mongoUrl = process.env.MONGODB_URL || config.mongodb_url;
+const mongoUrl = process.env.MONGODB_URL;
 mongoose.connect(mongoUrl, { useCreateIndex: true, useNewUrlParser: true }, (err) => {
     if (err) {
         throw err;
