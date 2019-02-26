@@ -11,7 +11,7 @@ Here's an example decoded JWT:
 ```javascript
 {
     "sub": "5c74344466bbe82823b2398e", // user ID
-    "xsrfToken":  "40410912-944d-4652-8b7a-40ba4f8892eb", // unique CSRF token
+    "xsrfToken": "40410912-944d-4652-8b7a-40ba4f8892eb", // unique CSRF token
     "iat": 1551165098,
     "exp": 1551251498
 }
