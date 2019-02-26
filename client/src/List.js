@@ -146,7 +146,7 @@ class List extends Component {
                 return res.json();
             }
         }).then((json) => {
-            this.setState({ list: json, showAddForm: false, title: '' });
+            this.setState({ list: json, title: '' });
         }).catch((err) => {
             window.console && window.console.error(err);
         });
