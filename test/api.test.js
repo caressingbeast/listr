@@ -199,19 +199,69 @@ describe('Listr API integration tests', () => {
             await protectedUser.save();
         });
 
-        describe('withAuth middleware', () => {
+        describe('withAuth middleware', () => {            
+            let authCalls = [
+                {
+                    url: 'userUrl',
+                    type: 'get'
+                },
+                {
+                    url: 'userUrl',
+                    type: 'put'
+                },
+                {
+                    url: 'userUrl',
+                    type: 'delete'
+                },
+                {
+                    url: 'listUrl',
+                    type: 'post'
+                },
+                {
+                    url: 'listUrl',
+                    type: 'get'
+                }
+            ];
+
+            function getAuthCalls () {
+                const listUrl = '/api/lists';
+                const userUrl = `/api/users/${loggedInUser.id}`;
+
+                return authCalls.map((c) => {
+                    if (c.url === 'userUrl') {
+                        c.url = userUrl;
+                    }
+
+                    if (c.url === 'listUrl') {
+                        c.url = listUrl;
+                    }
+
+                    return c;
+                });
+            }
+
+            function generateRequest (data) {
+                const req = request(app);
+
+                switch (data.type) {
+                    case 'get':
+                        return req.get(data.url);
+
+                    case 'post':
+                        return req.post(data.url);
+
+                    case 'put':
+                        return req.put(data.url);
+
+                    case 'delete': 
+                        return req.delete(data.url);
+                }
+            }
 
             it('responds with 401 if no JWT cookie', async () => {
-                const promiseArray = [
-                    
-                    request(app)
-                        .get(`/api/users/${loggedInUser.id}`)
-                        .set('Listr-CSRF-Token', loggedInUser.token),
-                    
-                    request(app)
-                        .put(`/api/users/${loggedInUser.id}`)
-                        .set('Listr-CSRF-Token', loggedInUser.token)
-                ];
+                const promiseArray = getAuthCalls().map((c) => {
+                    return generateRequest(c).set('Listr-CSRF-Token', loggedInUser.token);
+                });
 
                 const res = await Promise.all(promiseArray);
                 
@@ -221,16 +271,9 @@ describe('Listr API integration tests', () => {
             });
     
             it('responds with 401 if no CSRF token', async () => {
-                const promiseArray = [
-
-                    request(app)
-                        .get(`/api/users/${loggedInUser.id}`)
-                        .set('Cookie', [loggedInUser.cookie]),
-
-                    request(app)
-                        .put(`/api/users/${loggedInUser.id}`)
-                        .set('Cookie', [loggedInUser.cookie]),
-                ];
+                const promiseArray = getAuthCalls().map((c) => {
+                    return generateRequest(c).set('Cookie', [loggedInUser.cookie]);
+                });
 
                 const res = await Promise.all(promiseArray);
 
@@ -240,18 +283,13 @@ describe('Listr API integration tests', () => {
             });
     
             it('responds with 401 if JWT and CSRF don\'t match', async () => {
-                const promiseArray = [
-
-                    request(app)
-                        .get(`/api/users/${loggedInUser.id}`)
+                const token = '1234567890';
+                
+                const promiseArray = getAuthCalls().map((c) => {
+                    return generateRequest(c)
                         .set('Cookie', [loggedInUser.cookie])
-                        .set('Listr-CSRF-Token', '1234567890'),
-
-                    request(app)
-                        .put(`/api/users/${loggedInUser.id}`)
-                        .set('Cookie', [loggedInUser.cookie])
-                        .set('Listr-CSRF-Token', '1234567890'),
-                ];
+                        .set('Listr-CSRF-Token', token);
+                });
 
                 const res = await Promise.all(promiseArray);
 
@@ -301,7 +339,7 @@ describe('Listr API integration tests', () => {
                 expect(res.status, 'sends correct status').to.equal(404);
             });
 
-            it('responds with 401 if not requesting same user', async () => {
+            it('responds with 401 if :user_id does not match JWT user', async () => {
                 const res = await request(app)
                     .put(`/api/users/${protectedUser.id}`)
                     .set('Cookie', [loggedInUser.cookie])
@@ -337,6 +375,101 @@ describe('Listr API integration tests', () => {
                 expect(res.body.email).to.equal(user.email);
                 expect(res.body.firstName).to.equal(user.firstName);
                 expect(res.body.lastName).to.equal(user.lastName);
+            });
+        });
+
+        describe('DELETE /api/users/:user_id', () => {
+
+            it('responds with 404 if no user found', async () => {
+                const id = mongoose.Types.ObjectId();
+    
+                const res = await request(app)
+                    .delete(`/api/users/${id}`)
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+    
+                expect(res.status, 'sends correct status').to.equal(404);
+            });
+
+            it('responds with 401 if :user_id does not match JWT user', async () => {
+                const res = await request(app)
+                    .delete(`/api/users/${protectedUser.id}`)
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+    
+                expect(res.status, 'sends correct status').to.equal(401);
+            });
+
+            it('responds with 200 and expected data if valid request', async () => {
+                const res = await request(app)
+                    .delete(`/api/users/${loggedInUser.id}`)
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+    
+                expect(res.status, 'sends correct status').to.equal(200);
+                expect(res.body.email).to.equal(loggedInUser.email);
+                expect(res.body.firstName).to.equal(loggedInUser.firstName);
+                expect(res.body.lastName).to.equal(loggedInUser.lastName);
+            });
+        });
+
+        describe('POST /api/lists', () => {
+
+            it('responds with 400 if missing required fields', async () => {
+                const res = await request(app)
+                    .post('/api/lists')
+                    .send({})
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+
+                expect(res.status, 'sends correct status').to.equal(400);
+            });
+
+            it('responds with 200 and expected data if valid request', async () => {
+                const title = 'List title';
+
+                const res = await request(app)
+                    .post('/api/lists')
+                    .send({ title })
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+
+                expect(res.status, 'sends correct status').to.equal(200);
+                expect(res.body.title, 'sets title').to.equal(title);
+                expect(res.body.created_by, 'sets created_by').to.equal(loggedInUser.id);
+            });
+        });
+
+        describe('GET /api/lists', () => {
+
+            it('returns 200 and expected data if valid request', async () => {
+                
+                // save a list to the database
+                const userList = new List({
+                    title: 'userList',
+                    created_by: loggedInUser.id
+                });
+                await userList.save();
+
+                // save a list for a different user
+                const protectedList = new List({
+                    title: 'protectedList',
+                    created_by: protectedUser.id
+                });
+                await protectedList.save();
+
+                const res = await request(app)
+                    .get('/api/lists')
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+
+                expect(res.status).to.equal(200);
+                expect(res.body.lists, 'sets lists').to.have.lengthOf(1);
+                expect(res.body.sharedLists, 'sets sharedLists').to.have.lengthOf(0);
+
+                const list = res.body.lists[0];
+                expect(list.title).to.equal(userList.title);
+                expect(list.created_by).to.equal(loggedInUser.id);
             });
         });
     });

@@ -154,6 +154,14 @@ module.exports = (app) => {
                 return res.status(500).send(err);
             }
 
+            if (!user) {
+                return res.status(404).send('Not Found');
+            }
+
+            if (req.params.user_id !== req.userId) {
+                return res.status(401).send('Unauthorized');
+            }
+
             user.remove(function (saveErr, removedUser) {
                 if (saveErr) {
                     return res.status(500).send(saveErr);
@@ -169,12 +177,10 @@ module.exports = (app) => {
         let { title } = req.body;
 
         if (!title) {
-            return res.status(400).send('Invalid title!');
+            return res.status(400).send('Bad Request');
         }
 
-        title = title.trim();
-
-        const list = new List({ title, created_by: req.userId });
+        const list = new List({ title: title.trim(), created_by: req.userId });
 
         list.save(function (err) {
             if (err) {
