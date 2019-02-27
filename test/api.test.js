@@ -173,6 +173,7 @@ describe('Listr API integration tests', () => {
 
     describe('protected routes', () => {
         let loggedInUser;
+        let loggedInUserList;
         let protectedUser;
 
         beforeEach(async () => {
@@ -182,6 +183,15 @@ describe('Listr API integration tests', () => {
             await user.save();
 
             loggedInUser = user;
+
+            // save a list to the database
+            const list = new List({
+                title: 'loggedInUserList',
+                created_by: loggedInUser.id
+            });
+            await list.save();
+
+            loggedInUserList = list;
 
             // log in
             const res = await request(app)
@@ -220,16 +230,25 @@ describe('Listr API integration tests', () => {
                 {
                     url: 'listUrl',
                     type: 'get'
+                },
+                {
+                    url: 'singleListUrl',
+                    type: 'get'
                 }
             ];
 
             function getAuthCalls () {
                 const listUrl = '/api/lists';
+                const singleListUrl = `/api/users/${loggedInUserList.id}`;
                 const userUrl = `/api/users/${loggedInUser.id}`;
 
                 return authCalls.map((c) => {
                     if (c.url === 'userUrl') {
                         c.url = userUrl;
+                    }
+
+                    if (c.url === 'singleListUrl') {
+                        c.url = singleListUrl;
                     }
 
                     if (c.url === 'listUrl') {
@@ -443,13 +462,6 @@ describe('Listr API integration tests', () => {
         describe('GET /api/lists', () => {
 
             it('returns 200 and expected data if valid request', async () => {
-                
-                // save a list to the database
-                const userList = new List({
-                    title: 'userList',
-                    created_by: loggedInUser.id
-                });
-                await userList.save();
 
                 // save a list for a different user
                 const protectedList = new List({
@@ -468,8 +480,33 @@ describe('Listr API integration tests', () => {
                 expect(res.body.sharedLists, 'sets sharedLists').to.have.lengthOf(0);
 
                 const list = res.body.lists[0];
-                expect(list.title).to.equal(userList.title);
+                expect(list.title).to.equal(loggedInUserList.title);
                 expect(list.created_by).to.equal(loggedInUser.id);
+            });
+        });
+
+        describe('GET /api/lists/:list_id', () => {
+
+            it('responds with 404 if no list found', async () => {
+                const id = mongoose.Types.ObjectId();
+
+                const res = await request(app)
+                    .get(`/api/lists/${id}`)
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+
+                expect(res.status).to.equal(404);
+            });
+
+            it('responds with 200 and expected data if valid request', async () => {
+                const res = await request(app)
+                    .get(`/api/lists/${loggedInUserList.id}`)
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+
+                expect(res.status).to.equal(200);
+                expect(res.body.created_by).to.equal(loggedInUser.id);
+                expect(res.body.title).to.equal(loggedInUserList.title);
             });
         });
     });
