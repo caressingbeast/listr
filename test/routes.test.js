@@ -238,7 +238,7 @@ describe('Listr API integration tests', () => {
             // save a list to the database
             const list = new List({
                 title: 'loggedInUserList',
-                created_by: loggedInUser.id
+                createdBy: loggedInUser.id
             });
             await list.save();
 
@@ -537,8 +537,8 @@ describe('Listr API integration tests', () => {
     
                     expect(res.status, 'sends correct status').to.equal(200);
                     expect(res.body.title, 'sets title').to.equal(title.trim());
-                    expect(res.body.created_by, 'sets created_by').to.equal(loggedInUser.id);
-                    expect(ObjectId.isValid(res.body.created_by), 'converts to valid ObjectId').to.be.true;
+                    expect(res.body.createdBy, 'sets createdBy').to.equal(loggedInUser.id);
+                    expect(ObjectId.isValid(res.body.createdBy), 'converts to valid ObjectId').to.be.true;
                 });
             });
     
@@ -549,7 +549,7 @@ describe('Listr API integration tests', () => {
                     // save a list for a different user
                     const protectedList = new List({
                         title: 'protectedList',
-                        created_by: protectedUser.id
+                        createdBy: protectedUser.id
                     });
                     await protectedList.save();
     
@@ -564,7 +564,7 @@ describe('Listr API integration tests', () => {
     
                     const list = res.body.lists[0];
                     expect(list.title).to.equal(loggedInUserList.title);
-                    expect(list.created_by).to.equal(loggedInUser.id);
+                    expect(list.createdBy).to.equal(loggedInUser.id);
                 });
             });
     
@@ -588,7 +588,7 @@ describe('Listr API integration tests', () => {
                         .set('Listr-CSRF-Token', loggedInUser.token);
     
                     expect(res.status, 'sends correct status').to.equal(200);
-                    expect(res.body.created_by, 'sends correct created_by').to.equal(loggedInUser.id);
+                    expect(res.body.createdBy, 'sends correct createdBy').to.equal(loggedInUser.id);
                     expect(res.body.title, 'sends correct title').to.equal(loggedInUserList.title);
                 });
             });
@@ -606,12 +606,12 @@ describe('Listr API integration tests', () => {
                     expect(res.status, 'sends correct status').to.equal(404);
                 });
     
-                it('responds with 401 if created_by does not equal JWT user', async () => {
+                it('responds with 401 if createdBy does not equal JWT user', async () => {
                     
                     // save a list for a different user
                     const protectedList = new List({
                         title: 'protectedList',
-                        created_by: protectedUser.id
+                        createdBy: protectedUser.id
                     });
                     await protectedList.save();
     
@@ -654,7 +654,7 @@ describe('Listr API integration tests', () => {
                         // save a list for a different user
                         const protectedList = new List({
                             title: 'protectedList',
-                            created_by: protectedUser.id
+                            createdBy: protectedUser.id
                         });
                         await protectedList.save();
 
@@ -688,9 +688,9 @@ describe('Listr API integration tests', () => {
 
                         // save a list for a different user
                         const protectedList = new List({
+                            sharedUsers: [loggedInUser.id],
                             title: 'protectedList',
-                            created_by: protectedUser.id,
-                            shared_users: [loggedInUser.id]
+                            createdBy: protectedUser.id
                         });
                         await protectedList.save();
 
@@ -710,7 +710,7 @@ describe('Listr API integration tests', () => {
                         expect(list.items, 'adds item').to.have.lengthOf(1);
 
                         // populates shared users
-                        const user = list.shared_users[0];
+                        const user = list.sharedUsers[0];
                         expect(user.firstName).to.equal(loggedInUser.firstName);
                         expect(user.firstName).to.equal(loggedInUser.firstName);
                         expect(user.lastName).to.equal(loggedInUser.lastName);
@@ -771,7 +771,7 @@ describe('Listr API integration tests', () => {
                         // save a list for a different user
                         const protectedList = new List({
                             title: 'protectedList',
-                            created_by: protectedUser.id
+                            createdBy: protectedUser.id
                         });
                         await protectedList.save();
 
@@ -855,15 +855,15 @@ describe('Listr API integration tests', () => {
 
                         // save a list for a different user
                         const protectedList = new List({
-                            created_by: protectedUser.id,
-                            shared_users: [loggedInUser.id],
-                            title: 'protectedList',
                             items: [
                                 {
                                     completed: true,
                                     title: 'listItem'
                                 }
-                            ]
+                            ],
+                            sharedUsers: [loggedInUser.id],
+                            title: 'protectedList',
+                            createdBy: protectedUser.id
                         });
                         await protectedList.save();
 

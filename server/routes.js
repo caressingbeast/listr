@@ -19,13 +19,13 @@ module.exports = (app) => {
         let hasPermission = false;
 
         // creator can add items
-        if (ObjectId(list.created_by).toString() === req.userId) {
+        if (ObjectId(list.createdBy).toString() === req.userId) {
             hasPermission = true;
         }
 
         // shared users can add items
-        if (!hasPermission && list.shared_users.length) {
-            hasPermission = list.shared_users.some(function (u) {
+        if (!hasPermission && list.sharedUsers.length) {
+            hasPermission = list.sharedUsers.some(function (u) {
                 return ObjectId(u.id).toString() === req.userId;
             });
         }
@@ -204,7 +204,7 @@ module.exports = (app) => {
             return res.status(400).send('Bad Request');
         }
 
-        const list = new List({ title: title.trim(), created_by: ObjectId(req.userId) });
+        const list = new List({ title: title.trim(), createdBy: ObjectId(req.userId) });
 
         list.save(function (err) {
             if (err) {
@@ -217,12 +217,12 @@ module.exports = (app) => {
 
     // GET: get all lists for a user
     app.get('/api/lists', withAuth, function (req, res) {
-        List.find({ created_by: req.userId }, function (err, lists) {
+        List.find({ createdBy: req.userId }, function (err, lists) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            List.find({ shared_users: req.userId }, function (err, sharedLists) {
+            List.find({ sharedUsers: req.userId }, function (err, sharedLists) {
                 if (err) {
                     return res.status(500).send(err);
                 }
@@ -240,7 +240,7 @@ module.exports = (app) => {
     // GET: get a list
     app.get('/api/lists/:list_id', withAuth, function (req, res) {
         List.findById(req.params.list_id)
-            .populate('shared_users')
+            .populate('sharedUsers')
             .exec(function (err, list) {
                 if (err) {
                     return res.status(500).send(err);
@@ -267,7 +267,7 @@ module.exports = (app) => {
             }
 
             // only the creator can delete a list
-            if (ObjectId(list.created_by).toString() !== req.userId) {
+            if (ObjectId(list.createdBy).toString() !== req.userId) {
                 return res.status(401).send('Unauthorized');
             }
 
@@ -284,7 +284,7 @@ module.exports = (app) => {
     // POST: create an item on a list
     app.post('/api/lists/:list_id/items', withAuth, function (req, res) {
         List.findById(req.params.list_id)
-            .populate('shared_users')
+            .populate('sharedUsers')
             .exec(function (err, list) {
                 if (err) {
                     return res.status(500).send(err);
@@ -325,7 +325,7 @@ module.exports = (app) => {
         }
 
         List.findById(req.params.list_id)
-            .populate('shared_users')
+            .populate('sharedUsers')
             .exec(function (err, list) {
                 if (err) {
                     return res.status(500).send(err);
@@ -368,7 +368,7 @@ module.exports = (app) => {
     // DELETE: delete an item on a list
     app.delete('/api/lists/:list_id/items/:item_id', withAuth, function (req, res) {
         List.findById(req.params.list_id)
-            .populate('shared_users')
+            .populate('sharedUsers')
             .exec(function (err, list) {
                 if (err) {
                     return res.status(500).send(err);
@@ -406,7 +406,7 @@ module.exports = (app) => {
             }
 
             // only the creator can share a list
-            if (list.created_by.toString() !== req.userId) {
+            if (list.createdBy.toString() !== req.userId) {
                 return res.status(401).send('Unauthorized');
             }
 
@@ -423,7 +423,7 @@ module.exports = (app) => {
                     return res.status(204).send('No Content');
                 }
 
-                list.shared_users.push(user);
+                list.sharedUsers.push(user);
 
                 list.save(function (saveErr, updatedList) {
                     if (saveErr) {
@@ -439,7 +439,7 @@ module.exports = (app) => {
     // DELETE: unshare a list 
     app.delete('/api/lists/:list_id/shared', function (req, res) {
         List.findById(req.params.list_id)
-            .populate('shared_users')
+            .populate('sharedUsers')
             .exec(function (err, list) {
                 if (err) {
                     return res.status(500).send(err);
@@ -449,7 +449,7 @@ module.exports = (app) => {
                     return res.status(404).send('Not Found');
                 }
 
-                list.shared_users.pull(req.body.id);
+                list.sharedUsers.pull(req.body.id);
 
                 list.save(function (saveErr, updatedList) {
                     if (saveErr) {

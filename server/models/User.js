@@ -15,10 +15,12 @@ const UserSchema = new mongoose.Schema({
     },
     firstName: {
         type: String,
+        required: true,
         trim: true
     },
     lastName: {
         type: String,
+        required: true,
         trim: true
     },
     password: {
@@ -26,7 +28,7 @@ const UserSchema = new mongoose.Schema({
         required: true,
         select: false
     },
-    created_at: {
+    createdAt: {
         type: Date,
         default: Date.now
     }
@@ -43,8 +45,6 @@ UserSchema.pre('save', function (next) {
     if (!user.isModified('password')) {
         return next();
     }
-
-    user.password = user.password.trim();
     
     return bcrypt.hash(user.password, SALT_ROUNDS, function (err, hashedPassword) {
         if (err) {
