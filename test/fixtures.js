@@ -13,15 +13,23 @@ const users = [
     }
 ];
 
+function format (str) {
+    return str.toLowerCase().trim();
+}
+
+function getRandom (arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
 module.exports = {
     getRandomUser () {
-        return users[Math.floor(Math.random() * users.length)];
+        return getRandom(users);
     },
     getUniqueUser (email) {
         const uniqueUsers = users.filter((u) => {
-            return u.email.toLowerCase().trim() !== email.toLowerCase().trim();
+            return format(u.email) !== format(email);
         });
 
-        return uniqueUsers[Math.floor(Math.random() * uniqueUsers.length)];
+        return getRandom(uniqueUsers);
     }
 };

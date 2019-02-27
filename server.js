@@ -8,7 +8,7 @@ const helmet = require('helmet');
 const mongoose = require('mongoose');
 const path = require('path');
 
-const config = require('./configuration.js');
+const config = require('./server/configuration.js');
 const NODE_ENV = process.env.NODE_ENV;
 
 // ignore on prod
@@ -31,7 +31,7 @@ mongoose.connect(mongoUrl, { useCreateIndex: true, useNewUrlParser: true }, (err
     }
 });
 
-require('./routes.js')(app);
+require('./server/routes.js')(app);
 
 // use the build version in production
 if (NODE_ENV === 'production') {
