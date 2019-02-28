@@ -20,13 +20,13 @@ let sandbox;
 
 describe('Listr API integration tests', () => {
 
-    beforeEach(async () => {
+    beforeEach(() => {
         sandbox = sinon.createSandbox();
-        await User.deleteMany({});
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         sandbox.restore();
+        await User.deleteMany({});
     });
 
     describe('public routes', () => {

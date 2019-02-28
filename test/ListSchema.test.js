@@ -1,22 +1,11 @@
 const expect = require('chai').expect;
-const sinon = require('sinon');
 const mongoose = require('mongoose');
 
 const ObjectId = mongoose.Types.ObjectId;
 
 const List = require('../server/models/List');
 
-let sandbox;
-
-describe.only('ListSchema', () => {
-
-    beforeEach(() => {
-        sandbox = sinon.createSandbox();
-    });
-
-    afterEach(() => {
-        sandbox.restore();
-    });
+describe('ListSchema', () => {
 
     it('requires title', (done) => {
         const list = new List({
