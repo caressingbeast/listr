@@ -11,7 +11,8 @@ const ListSchema = new mongoose.Schema({
             },
             title: {
                 type: String,
-                required: true
+                required: true,
+                trim: true
             },
             createdAt: {
                 type: Date,
@@ -27,7 +28,8 @@ const ListSchema = new mongoose.Schema({
     ],
     title: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     createdAt: {
         type: Date,
@@ -35,7 +37,8 @@ const ListSchema = new mongoose.Schema({
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true
     },
 });
 
