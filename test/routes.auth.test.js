@@ -13,7 +13,7 @@ const User = require('../server/models/User.js');
 
 let sandbox;
 
-describe('Listr API auth', () => {
+describe('API auth', () => {
 
     beforeEach(() => {
         sandbox = sinon.createSandbox();

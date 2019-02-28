@@ -93,7 +93,7 @@ module.exports = (app) => {
     app.post('/api/users', function (req, res) {
         const body = req.body;
 
-        // all fields are required
+        // check for required fields
         if (!body.email || !body.firstName || !body.lastName || !body.password) {
             return res.status(400).send('Bad Request');
         }
@@ -120,7 +120,7 @@ module.exports = (app) => {
             delete objUser.password;
 
             res.cookie('jwt', token, { httpOnly: true, secure: isProd });
-            return res.status(201).send({ id: payload.sub, token, user: objUser, xsrfToken });
+            return res.status(201).json({ id: payload.sub, token, user: objUser, xsrfToken });
         });
     });
 
@@ -131,6 +131,7 @@ module.exports = (app) => {
                 return res.status(500).send(err);
             }
 
+            // no user so exit
             if (!user) {
                 return res.status(404).send('Not Found');
             }
@@ -141,54 +142,58 @@ module.exports = (app) => {
 
     // PUT: update a user
     app.put('/api/users/:user_id', withAuth, function (req, res) {
+        const body = req.body;
+
+        // check for required fields
+        if (!body.email || !body.firstName || !body.lastName) {
+            return res.status(400).send('Bad Request');
+        }
+
+        // check for permission
+        if (req.params.user_id !== req.userId) {
+            return res.status(401).send('Unauthorized');
+        }
+
         User.findById(req.params.user_id, function (err, user) {
             if (err) {
                 return res.status(500).send(err);
             }
 
+            // no user so exit
             if (!user) {
                 return res.status(404).send('Not Found');
             }
 
-            // restrict to same user
-            if (req.params.user_id !== req.userId) {
-                return res.status(401).send('Unauthorized');
-            }
-
-            const { email, firstName, lastName } = req.body;
-
-            // all fields are required
-            if (!email || !firstName || !lastName) {
-                return res.status(400).send('Bad Request');
-            }
-
-            user.email = email;
-            user.firstName = firstName;
-            user.lastName = lastName;
+            user.email = body.email;
+            user.firstName = body.firstName;
+            user.lastName = body.lastName;
 
             user.save(function (saveErr, updatedUser) {
                 if (saveErr) {
                     return res.status(500).send(saveErr);
                 }
 
-                return res.status(200).send(updatedUser);
+                return res.status(200).json(updatedUser);
             });
         });
     });
 
     // DELETE: delete a user
     app.delete('/api/users/:user_id', withAuth, function (req, res) {
+
+        // check for permission
+        if (req.params.user_id !== req.userId) {
+            return res.status(401).send('Unauthorized');
+        }
+
         User.findById(req.params.user_id, function (err, user) {
             if (err) {
                 return res.status(500).send(err);
             }
 
+            // no user so exit
             if (!user) {
                 return res.status(404).send('Not Found');
-            }
-
-            if (req.params.user_id !== req.userId) {
-                return res.status(401).send('Unauthorized');
             }
 
             user.remove(function (saveErr, removedUser) {

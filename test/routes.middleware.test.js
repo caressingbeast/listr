@@ -1,18 +1,18 @@
+const jwt = require('jsonwebtoken');
+
 const app = require('../server.js');
 const config = require('../server/configuration.js');
 const helpers = require('./helpers.js');
-
-const jwt = require('jsonwebtoken');
 
 const expect = require('chai').expect;
 const request = require('supertest');
 const sinon = require('sinon');
 
 const ObjectId = require('mongoose').Types.ObjectId;
+const randomId = ObjectId();
 
 const User = require('../server/models/User.js');
 
-let randomId = ObjectId();
 let auth;
 let sandbox;
 
