@@ -14,7 +14,7 @@ function getRes (expected) {
         status: (code) => {
             return {
                 send: (text) => {
-                    expect(code, 'sends correct code').to.equal(expected.code);
+                    expect(code, 'sends correct status').to.equal(expected.code);
                     expect(text, 'sends expected text').to.equal(expected.text);
                 }
             };
@@ -22,7 +22,7 @@ function getRes (expected) {
     };
 }
 
-describe.only('withAuth middleware', () => {
+describe('withAuth middleware', () => {
 
     beforeEach(() => {
         sandbox = sinon.createSandbox();
@@ -32,7 +32,7 @@ describe.only('withAuth middleware', () => {
         sandbox.restore();
     });
 
-    it('returns correct status if no token', () => {
+    it('responds with 401 if no JWT cookie', () => {
         const callback = sandbox.stub();
 
         let req = {
@@ -42,7 +42,7 @@ describe.only('withAuth middleware', () => {
 
         const res = getRes({
             code: 401,
-            text: 'Unauthorized: no token'
+            text: 'Unauthorized: no cookie'
         });
 
         withAuth(req, res, callback);
@@ -50,7 +50,7 @@ describe.only('withAuth middleware', () => {
         expect(callback.called, 'does not invoke callback').to.be.false;
     });
 
-    it('returns correct status if no custom header', () => {
+    it('responds with 401 if no CSRF header', () => {
         const callback = sandbox.stub();
 
         let req = {
@@ -62,7 +62,7 @@ describe.only('withAuth middleware', () => {
 
         const res = getRes({
             code: 401,
-            text: 'Unauthorized: no xsrfToken'
+            text: 'Unauthorized: no CSRF header'
         });
 
         withAuth(req, res, callback);
@@ -70,7 +70,7 @@ describe.only('withAuth middleware', () => {
         expect(callback.called, 'does not invoke callback').to.be.false;
     });
 
-    it('returns 500 if verify error', () => {
+    it('responds with 500 if JWT token can\'t be verified', () => {
         const callback = sandbox.stub();
 
         let req = {
@@ -98,7 +98,7 @@ describe.only('withAuth middleware', () => {
         expect(callback.called, 'does not invoke callback').to.be.false;
     });
 
-    it('returns 401 if tokens don\'t match', () => {
+    it('responds with 401 if CSRF keys don\'t match', () => {
         let callback = sandbox.stub();
 
         let req = {
@@ -112,7 +112,7 @@ describe.only('withAuth middleware', () => {
 
         const res = getRes({
             code: 401,
-            text: 'Unauthorized: invalid xsrfToken'
+            text: 'Unauthorized: invalid CSRF key'
         });
 
         sandbox.stub(jwt, 'verify').callsFake((token, tokenSecret, cb) => {

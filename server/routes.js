@@ -84,6 +84,11 @@ module.exports = (app) => {
         return res.status(200).send({ token: null, xsrfToken: null });
     });
 
+    // POST: verify a JWT
+    app.post('/api/auth/verify', withAuth, function (req, res) {
+        return res.status(200).send({ id: req.userId });
+    });
+
     // POST: create a user
     app.post('/api/users', function (req, res) {
         const body = req.body;
@@ -437,7 +442,7 @@ module.exports = (app) => {
     });
 
     // DELETE: unshare a list 
-    app.delete('/api/lists/:list_id/shared', function (req, res) {
+    app.delete('/api/lists/:list_id/shared', withAuth, function (req, res) {
         List.findById(req.params.list_id)
             .populate('sharedUsers')
             .exec(function (err, list) {
@@ -459,10 +464,5 @@ module.exports = (app) => {
                     return res.status(200).json(updatedList);
                 });
             });
-    });
-
-    // POST: verify a JWT
-    app.post('/api/auth/verify', withAuth, function (req, res) {
-        return res.status(200).send({ id: req.userId });
     });
 };

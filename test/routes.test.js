@@ -14,8 +14,8 @@ const List = require('../server/models/List.js');
 const User = require('../server/models/User.js');
 
 const ObjectId = mongoose.Types.ObjectId;
-
 const randomUser = fixtures.getRandomUser();
+
 let sandbox;
 
 describe('Listr API integration tests', () => {
@@ -167,6 +167,10 @@ describe('Listr API integration tests', () => {
                 expect(res.body.xsrfToken, 'sends null xsrfToken').to.be.null;
                 expect(res.headers['set-cookie'][0], 'clears cookie').to.not.equal(cookie);
             });
+        });
+
+        describe('POST /api/auth/verify', () => {
+            
         });
     
         describe('POST /api/users', () => {  
