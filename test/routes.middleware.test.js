@@ -90,7 +90,7 @@ function createRequest (route) {
     }
 }
 
-describe('Listr authentication middleware', () => {
+describe('API authentication middleware', () => {
 
     before(async () => {
         auth = await helpers.logInUser();

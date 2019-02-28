@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 
 const config = require('../server/configuration.js');
-const secret = config.SECRET_KEY;
 const withAuth = require('../server/middleware.js');
 
 const expect = require('chai').expect;
