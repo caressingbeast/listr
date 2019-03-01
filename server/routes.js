@@ -476,32 +476,37 @@ module.exports = (app) => {
             return res.status(400).send('Bad Request');
         }
 
-        List.findById(req.params.list_id)
-            .populate('sharedUsers')
-            .exec(function (err, list) {
-                if (err) {
-                    return res.status(500).send(err);
+        List.findById(req.params.list_id, function (err, list) {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            // no list so exit
+            if (!list) {
+                return res.status(404).send('Not Found');
+            }
+
+            // check for permission
+            if (ObjectId(list.createdBy).toString() !== req.userId) {
+                return res.status(401).send('Unauthorized');
+            }
+
+            list.sharedUsers.pull(req.body.id);
+
+            list.save(function (saveErr, updatedList) {
+                if (saveErr) {
+                    return res.status(500).send(saveErr);
                 }
 
-                // no list so exit
-                if (!list) {
-                    return res.status(404).send('Not Found');
-                }
-
-                // check for permission
-                if (ObjectId(list.createdBy).toString() !== req.userId) {
-                    return res.status(401).send('Unauthorized');
-                }
-
-                list.sharedUsers.pull(req.body.id);
-
-                list.save(function (saveErr, updatedList) {
-                    if (saveErr) {
-                        return res.status(500).send(saveErr);
+                // populate sharedUsers
+                User.populate(updatedList, { path: 'sharedUsers' }, function (populateErr, populatedList) {
+                    if (populateErr) {
+                        return res.status(500).send(populateErr);
                     }
 
-                    return res.status(200).json(updatedList);
+                    return res.status(200).json(populatedList);
                 });
             });
+        });
     });
 };

@@ -826,6 +826,14 @@ describe('API lists', () => {
         });
 
         describe('DELETE /api/lists/:list_id/shared', function () {
+
+            function createRequest (data) {
+                return request(app)
+                    .post(`/api/lists/${data.id}/shared`)
+                    .send(data.body)
+                    .set('Cookie', [loggedInUser.cookie])
+                    .set('Listr-CSRF-Token', loggedInUser.token);
+            }
         });
     });
 });
