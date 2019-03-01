@@ -208,20 +208,21 @@ module.exports = (app) => {
 
     // POST: create a new list
     app.post('/api/lists', withAuth, function (req, res) {
-        let { title } = req.body;
+        const { title } = req.body;
 
+        // check for required fields
         if (!title) {
             return res.status(400).send('Bad Request');
         }
 
-        const list = new List({ title: title.trim(), createdBy: ObjectId(req.userId) });
+        const list = new List({ title, createdBy: req.userId });
 
         list.save(function (err) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            return res.status(200).send(list);
+            return res.status(201).json(list);
         });
     });
 
@@ -242,7 +243,7 @@ module.exports = (app) => {
                     sharedLists
                 };
 
-                return res.status(200).send(payload);
+                return res.status(200).json(payload);
             });
         });
     });
@@ -256,11 +257,12 @@ module.exports = (app) => {
                     return res.status(500).send(err);
                 }
 
+                // no list so exit
                 if (!list) {
                     return res.status(404).send('Not Found');
                 }
 
-                return res.status(200).send(list);
+                return res.status(200).json(list);
             });
     });
 
@@ -271,12 +273,12 @@ module.exports = (app) => {
                 return res.status(500).send(err);
             }
 
-            // !list = 404
+            // no list so exit
             if (!list) {
                 return res.status(404).send('Not Found');
             }
 
-            // only the creator can delete a list
+            // check for permission
             if (ObjectId(list.createdBy).toString() !== req.userId) {
                 return res.status(401).send('Unauthorized');
             }
@@ -286,13 +288,20 @@ module.exports = (app) => {
                     return res.status(500).send(saveErr);
                 }
 
-                return res.status(200).send(removedList);
+                return res.status(200).json(removedList);
             });
         });
     });
 
     // POST: create an item on a list
     app.post('/api/lists/:list_id/items', withAuth, function (req, res) {
+        const { title } = req.body;
+
+        // check for required fields
+        if (!title) {
+            return res.status(400).send('Bad Request');
+        }
+
         List.findById(req.params.list_id)
             .populate('sharedUsers')
             .exec(function (err, list) {
@@ -310,23 +319,21 @@ module.exports = (app) => {
                     return res.status(400).send('Unauthorized');
                 }
 
-                // push the item
                 list.items.push({
-                    title: req.body.title.trim()
+                    title
                 });
 
-                // save and return the list
                 list.save(function (saveErr, updatedList) {
                     if (saveErr) {
-                        return res.error(500).send(saveErr);
+                        return res.status(500).send(saveErr);
                     }
         
-                    return res.status(200).send(updatedList);
+                    return res.status(201).json(updatedList);
                 });
             });
     });
 
-    // PUT: update an item on a list
+    // PUT: update "completed" on a list
     app.put('/api/lists/:list_id/items/:item_id', withAuth, function (req, res) {
 
         // check for required fields
@@ -351,26 +358,25 @@ module.exports = (app) => {
                     return res.status(400).send('Unauthorized');
                 }
 
-                // get the item
                 let item = list.items.find(function (i) {
                     return i.id === req.params.item_id;
                 });
+
+                console.log(item);
 
                 // no item so exit
                 if (!item) {
                     return res.status(404).send('Not Found');
                 }
 
-                // set completed
                 item.completed = req.body.completed;
 
-                // save and return the list
                 list.save(function (saveErr, updatedList) {
                     if (saveErr) {
                         return res.status(500).send(saveErr);
                     }
 
-                    return res.status(200).send(updatedList);
+                    return res.status(200).json(updatedList);
                 });
             });
     });
@@ -391,56 +397,72 @@ module.exports = (app) => {
 
                 // check for permission
                 if (!checkForListPermission(list, req)) {
-                    return res.status(400).send('Unauthorized');
+                    return res.status(401).send('Unauthorized');
                 }
 
-                // pull the item
                 list.items.pull({ _id: req.params.item_id });
 
-                // save the list
                 list.save(function (saveErr, updatedList) {
                     if (saveErr) {
                         return res.status(500).send(saveErr);
                     }
 
-                    return res.status(200).send(updatedList);
+                    return res.status(200).json(updatedList);
                 });
             });
     });
 
     // POST: share a list
     app.post('/api/lists/:list_id/shared', withAuth, function (req, res) {
+        const { email } = req.body;
+
+        // check for required fields
+        if (!email) {
+            return res.status(400).send('Bad Request');
+        }
+
         List.findById(req.params.list_id, function (err, list) {
             if (err) {
                 return res.status(500).send(err);
             }
 
-            // only the creator can share a list
-            if (list.createdBy.toString() !== req.userId) {
+            // no list so exit
+            if (!list) {
+                return res.status(404).send('Not Found');
+            }
+
+            // check for permission
+            if (ObjectId(list.createdBy).toString() !== req.userId) {
                 return res.status(401).send('Unauthorized');
             }
 
-            // lowercase and trim
-            const email = req.body.email.toLowerCase().trim();
+            const formatted = req.body.email.toLowerCase().trim();
 
-            User.findOne({ email }, function (userErr, user) {
+            User.findOne({ email: formatted }, function (userErr, user) {
                 if (userErr) {
                     return res.status(500).send(userErr);
                 }
 
-                // if no user found, make the front-end think all is okay
+                // sucessful whether or not a user is found
                 if (!user) {
-                    return res.status(204).send('No Content');
+                    return res.status(200).json(list);
                 }
 
-                list.sharedUsers.push(user);
+                list.sharedUsers.push(user.id);
 
                 list.save(function (saveErr, updatedList) {
                     if (saveErr) {
                         return res.status(500).send(saveErr);
                     }
 
-                    return res.status(200).send(updatedList);
+                    // populate sharedUsers
+                    User.populate(updatedList, { path: 'sharedUsers' }, function (populateErr, populatedList) {
+                        if (populateErr) {
+                            return res.status(500).send(populateErr);
+                        }
+
+                        return res.status(200).json(populatedList);
+                    });
                 });
             });
         });
@@ -448,6 +470,12 @@ module.exports = (app) => {
 
     // DELETE: unshare a list 
     app.delete('/api/lists/:list_id/shared', withAuth, function (req, res) {
+
+        // check for required fields
+        if (!req.body.id) {
+            return res.status(400).send('Bad Request');
+        }
+
         List.findById(req.params.list_id)
             .populate('sharedUsers')
             .exec(function (err, list) {
@@ -455,8 +483,14 @@ module.exports = (app) => {
                     return res.status(500).send(err);
                 }
 
+                // no list so exit
                 if (!list) {
                     return res.status(404).send('Not Found');
+                }
+
+                // check for permission
+                if (ObjectId(list.createdBy).toString() !== req.userId) {
+                    return res.status(401).send('Unauthorized');
                 }
 
                 list.sharedUsers.pull(req.body.id);

@@ -78,11 +78,12 @@ class Register extends Component {
                 'Content-Type': 'application/json'
             }
         }).then((res) => {
-            if (res.status === 200) {
+            if (res.ok) {
                 return res.json();
             }
         }).then((json) => {
-            localStorage.setItem('x_token', json.xsrfToken);
+            AuthService.setUser(json.id);
+            AuthService.setToken(json.xsrfToken);
             this.props.history.push('/dashboard');
         });
     }

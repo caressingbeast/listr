@@ -6,13 +6,12 @@ const helpers = require('./helpers.js');
 const fixtures = require('./fixtures.js');
 
 const expect = require('chai').expect;
-const mongoose = require('mongoose');
 const request = require('supertest');
 const sinon = require('sinon');
 
 const User = require('../server/models/User.js');
 
-const ObjectId = mongoose.Types.ObjectId;
+const ObjectId = require('mongoose').Types.ObjectId;
 
 let sandbox;
 
@@ -140,13 +139,13 @@ describe('API users', () => {
         });
 
         it('responds with 401 if not an authorized user', async () => {
-            const protectedUser = await helpers.createUser();
-            const uniqueUser = fixtures.getUniqueUser(protectedUser.user.email);
+            const { modelUser, user } = await helpers.createUser();
+            const uniqueUser = fixtures.getUniqueUser(user.email);
             const { cookie, token } = await helpers.logInUser(uniqueUser);
 
             const res = await createRequest({
-                id: protectedUser.modelUser.id,
-                body: protectedUser.user,
+                id: modelUser.id,
+                body: user,
                 cookie,
                 token
             });
@@ -225,36 +224,87 @@ describe('API users', () => {
 
     describe('DELETE /api/users/:user_id', () => {
 
-        it('responds with 404 if no user found', async () => {
-            const id = ObjectId();
-
-            const res = await request(app)
-                .delete(`/api/users/${id}`)
-                .set('Cookie', [loggedInUser.cookie])
-                .set('Listr-CSRF-Token', loggedInUser.token);
-
-            expect(res.status, 'sends correct status').to.equal(404);
-        });
+        function createRequest (data) {
+            return request(app)
+                .delete(`/api/users/${data.id}`)
+                .set('Cookie', [data.cookie])
+                .set('Listr-CSRF-Token', data.token);
+        }
 
         it('responds with 401 if not an authorized user', async () => {
-            const res = await request(app)
-                .delete(`/api/users/${protectedUser.id}`)
-                .set('Cookie', [loggedInUser.cookie])
-                .set('Listr-CSRF-Token', loggedInUser.token);
+            const { cookie, token } = await helpers.logInUser();
 
-            expect(res.status, 'sends correct status').to.equal(401);
+            const res = await createRequest({
+                id: ObjectId(),
+                cookie,
+                token
+            });
+
+            expect(res.status, 'sends expected status').to.equal(401);
+        });
+
+        it('responds with 500 if DB find error', async () => {
+            const { cookie, modelUser, token } = await helpers.logInUser();
+
+            sandbox.stub(User, 'findById').callsFake((userId, cb) => {
+                expect(userId).to.equal(modelUser.id);
+                cb('500', null);
+            });
+
+            const res = await createRequest({
+                id: modelUser.id,
+                cookie,
+                token
+            });
+
+            expect(res.status, 'sends expected status').to.equal(500);
+            expect(res.text, 'sends expected text').to.equal('500');
+        });
+
+        it('responds with 404 if no user found', async () => {
+            const { cookie, modelUser, token } = await helpers.logInUser();
+
+            await User.deleteMany({});
+
+            const res = await createRequest({
+                id: modelUser.id,
+                cookie,
+                token
+            });
+
+            expect(res.status, 'sends expected status').to.equal(404);
+        });
+
+        it('respond with 500 if DB remove error', async () => {
+            const { cookie, modelUser, token } = await helpers.logInUser();
+
+            sandbox.stub(User.prototype, 'remove').callsFake((cb) => {
+                cb('500', null);
+            });
+
+            const res = await createRequest({
+                id: modelUser.id,
+                cookie,
+                token
+            });
+
+            expect(res.status, 'sends expected status').to.equal(500);
+            expect(res.text, 'sends expected text').to.equal('500');
         });
 
         it('responds with 200 and expected data if valid request', async () => {
-            const res = await request(app)
-                .delete(`/api/users/${loggedInUser.id}`)
-                .set('Cookie', [loggedInUser.cookie])
-                .set('Listr-CSRF-Token', loggedInUser.token);
+            const { cookie, modelUser, token } = await helpers.logInUser();
 
-            expect(res.status, 'sends correct status').to.equal(200);
-            expect(res.body.email).to.equal(loggedInUser.email);
-            expect(res.body.firstName).to.equal(loggedInUser.firstName);
-            expect(res.body.lastName).to.equal(loggedInUser.lastName);
+            const res = await createRequest({
+                id: modelUser.id,
+                cookie,
+                token
+            });
+
+            expect(res.status, 'sends expected status').to.equal(200);
+            expect(res.body.email).to.equal(modelUser.email);
+            expect(res.body.firstName).to.equal(modelUser.firstName);
+            expect(res.body.lastName).to.equal(modelUser.lastName);
         });
     });
 });

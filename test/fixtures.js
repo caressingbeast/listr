@@ -26,6 +26,11 @@ module.exports = {
         return getRandom(users);
     },
     getUniqueUser (email) {
+
+        if (!email) {
+            return getRandom(users);
+        }
+
         const uniqueUsers = users.filter((u) => {
             return format(u.email) !== format(email);
         });

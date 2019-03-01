@@ -52,12 +52,12 @@ class Login extends Component {
         });
 
         fetch('/api/auth/login', opts).then((res) => {
-            if (res.status === 200) {
+            if (res.ok) {
                 return res.json();
             }
         }).then((json) => {
-            AuthService.setToken(json.xsrfToken);
             AuthService.setUser(json.id);
+            AuthService.setToken(json.xsrfToken);
 
             const { from } = this.props.location.state || { from: { pathname: '/dashboard' } };
 

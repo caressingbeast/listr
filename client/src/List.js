@@ -142,7 +142,7 @@ class List extends Component {
         });
 
         fetch(`/api/lists/${state.list._id}/items`, opts).then((res) => {
-            if (res.status === 200) {
+            if (res.ok) {
                 return res.json();
             }
         }).then((json) => {
@@ -160,7 +160,7 @@ class List extends Component {
         });
 
         fetch(`/api/lists/${this.state.list._id}/items/${itemId}`, opts).then((res) => {
-            if (res.status === 200) {
+            if (res.ok) {
                 return res.json();
             }
         }).then((json) => {
@@ -212,7 +212,7 @@ class List extends Component {
         fetch(`/api/lists/${state.list._id}/shared`, opts).then((res) => {
             this.setState({ success: true });
 
-            if (res.status === 200) {
+            if (res.ok) {
                 return res.json();
             }
 
