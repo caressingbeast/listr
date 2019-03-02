@@ -10,7 +10,7 @@ Here's an example decoded JWT:
 
 ```javascript
 {
-    "sub": "5c74344466bbe82823b2398e", // user ID
+    "sub": "5c76d60e08c59c13fe9ee608", // user ID
     "xsrfToken": "40410912-944d-4652-8b7a-40ba4f8892eb", // unique CSRF token
     "iat": 1551165098,
     "exp": 1551251498
@@ -20,6 +20,6 @@ Here's an example decoded JWT:
 ## The future
 
 Here's a few things I want to do in the future:
-* Unit testing (coming soon!)
+* Unit testing (in development!)
 * A token refresh system
 * Email verifications and notifications

@@ -38,7 +38,7 @@ class Nav extends Component {
         });
 
         fetch('/api/auth/logout', opts).then((res) => {
-            if (res.status === 200) {
+            if (res.ok) {
                 AuthService.clearToken();
                 AuthService.clearUser();
                 this.props.history.push('/');

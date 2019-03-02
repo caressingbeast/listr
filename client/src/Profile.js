@@ -43,9 +43,9 @@ class Profile extends Component {
                         {state.success &&
                             <div className="message message-success">Your profile has been successfully updated.</div>
                         }
-                        <input className="form-input" name="email" type="email" placeholder="Email address" defaultValue={user.email} onChange={(e) => this.handleInputChange(e)} />
                         <input className="form-input" name="firstName" type="text" placeholder="First name" defaultValue={user.firstName} onChange={(e) => this.handleInputChange(e)} />
                         <input className="form-input" name="lastName" type="text" placeholder="Last name" defaultValue={user.lastName} onChange={(e) => this.handleInputChange(e)} />
+                        <input className="form-input" name="email" type="email" placeholder="Email address" defaultValue={user.email} onChange={(e) => this.handleInputChange(e)} />
                         <button type="submit">Save</button>
                     </fieldset>
                 </form>

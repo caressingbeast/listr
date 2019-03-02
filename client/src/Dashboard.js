@@ -126,7 +126,7 @@ class Dashboard extends Component {
         });
 
         fetch('/api/lists', opts).then((res) => {
-            if (res.status === 200) {
+            if (res.ok) {
                 return res.json();
             }
         }).then((json) => {

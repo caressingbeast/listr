@@ -15,10 +15,12 @@ const UserSchema = new mongoose.Schema({
     },
     firstName: {
         type: String,
+        required: true,
         trim: true
     },
     lastName: {
         type: String,
+        required: true,
         trim: true
     },
     password: {
@@ -26,7 +28,7 @@ const UserSchema = new mongoose.Schema({
         required: true,
         select: false
     },
-    created_at: {
+    createdAt: {
         type: Date,
         default: Date.now
     }
@@ -37,6 +39,8 @@ UserSchema.pre('save', function (next) {
 
     // lowercase and trim
     user.email = user.email.toLowerCase().trim();
+    user.firstName = user.firstName.trim();
+    user.lastName = user.lastName.trim();
 
     if (!user.isModified('password')) {
         return next();
