@@ -51,6 +51,7 @@ describe('API lists', () => {
         it('responds with 400 if missing required fields', async () => {
             const res = await createRequest({});
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(400);
         });
 
@@ -61,6 +62,7 @@ describe('API lists', () => {
 
             const res = await createRequest({ title: 'title' });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -70,6 +72,7 @@ describe('API lists', () => {
 
             const res = await createRequest({ title });
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(201);
             expect(res.body.title, 'sets title').to.equal(title.trim());
             expect(res.body.createdBy, 'sets createdBy').to.equal(loggedInUser.modelUser.id);
@@ -93,6 +96,7 @@ describe('API lists', () => {
 
             const res = await createRequest();
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -108,6 +112,7 @@ describe('API lists', () => {
 
             const res = await createRequest();
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -133,6 +138,7 @@ describe('API lists', () => {
 
             const res = await createRequest();
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(200);
             expect(res.body.lists, 'sends lists').to.have.lengthOf(1);
             expect(res.body.sharedLists, 'sends sharedLists').to.have.lengthOf(1);
@@ -163,6 +169,7 @@ describe('API lists', () => {
         it('responds with 404 if no list found', async () => {
             const res = await createRequest(ObjectId());
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(404);
         });
 
@@ -186,6 +193,7 @@ describe('API lists', () => {
 
             const res = await createRequest(id);
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -193,12 +201,14 @@ describe('API lists', () => {
         it('responds with 404 if no list found', async () => {
             const res = await createRequest(ObjectId());
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(404);
         });
 
         it('responds with 200 and expected data if valid request', async () => {
             const res = await createRequest(loggedInUserList.id);
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(200);
             expect(res.body.createdBy).to.equal(loggedInUser.modelUser.id);
             expect(res.body.title).to.equal(loggedInUserList.title);
@@ -224,6 +234,7 @@ describe('API lists', () => {
 
             const res = await createRequest(id);
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -231,6 +242,7 @@ describe('API lists', () => {
         it('responds with 404 if no list found', async () => {
             const res = await createRequest(ObjectId());
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(404);
         });
 
@@ -248,6 +260,7 @@ describe('API lists', () => {
 
             const res = await createRequest(privateList.id);
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(401);
         });
 
@@ -258,6 +271,7 @@ describe('API lists', () => {
 
             const res = await createRequest(loggedInUserList.id);
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -265,6 +279,7 @@ describe('API lists', () => {
         it('responds with 200 and expected data if valid request', async () => {
             const res = await createRequest(loggedInUserList.id);
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(200);
             expect(res.body._id).to.equal(loggedInUserList.id);
             expect(res.body.title).to.equal(loggedInUserList.title);
@@ -288,6 +303,7 @@ describe('API lists', () => {
                     id: ObjectId()
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(400);
             });
 
@@ -314,8 +330,9 @@ describe('API lists', () => {
                     body: { title: 'title' }
                 });
 
-                expect(res.status).to.equal(500);
-                expect(res.text).to.equal('500');
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(500);
+                expect(res.text, 'sends expected text').to.equal('500');
             });
 
             it('responds with 404 if no list found', async () => {
@@ -324,6 +341,7 @@ describe('API lists', () => {
                     body: { title: 'title' }
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(404);
             });
 
@@ -344,6 +362,7 @@ describe('API lists', () => {
                     body: { title: 'title' }
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(400);
             });
 
@@ -357,8 +376,9 @@ describe('API lists', () => {
                     body: { title: 'title' }
                 });
 
-                expect(res.status).to.equal(500);
-                expect(res.text).to.equal('500');
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(500);
+                expect(res.text, 'sends expected text').to.equal('500');
             });
 
             it('responds with 201 and expected data if user is creator', async () => {
@@ -371,6 +391,7 @@ describe('API lists', () => {
                     body: item
                 });
 
+                expect(res.ok).to.be.true;
                 expect(res.status, 'sends expected status').to.equal(201);
 
                 const list = res.body;
@@ -400,6 +421,7 @@ describe('API lists', () => {
                     body: item
                 });
 
+                expect(res.ok).to.be.true;
                 expect(res.status, 'sends expected status').to.equal(201);
 
                 const list = res.body;
@@ -427,6 +449,7 @@ describe('API lists', () => {
             it('responds with 400 if missing required fields', async () => {
                 const res = await createRequest({});
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(400);
             });
 
@@ -454,6 +477,7 @@ describe('API lists', () => {
                     body: { completed: true }
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(500);
             });
 
@@ -466,6 +490,7 @@ describe('API lists', () => {
                     body: { completed: true }
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(404);
             });
 
@@ -487,6 +512,7 @@ describe('API lists', () => {
                     body: { completed: true }
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(400);
             });
 
@@ -497,6 +523,7 @@ describe('API lists', () => {
                     body: { completed: true }
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(404);
             });
 
@@ -519,6 +546,7 @@ describe('API lists', () => {
                     body: { completed: false }
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(500);
             });
 
@@ -537,11 +565,13 @@ describe('API lists', () => {
                     body: { completed: false }
                 });
 
+                expect(res.ok).to.be.true;
                 expect(res.status, 'sends expected status').to.equal(200);
                 expect(res.body.items[0].completed, 'sets "completed"').to.be.false;
             });
 
             it('responds with 200 and sends expected data if user is a shared user', async () => {
+                
                 // create a new user and list for that user
                 const user = fixtures.getUniqueUser(loggedInUser.user.email);
                 const { modelUser } = await helpers.createUser(user);
@@ -565,6 +595,7 @@ describe('API lists', () => {
                     body: { completed: false }
                 });
 
+                expect(res.ok).to.be.true;
                 expect(res.status, 'sends expected status').to.equal(200);
                 expect(res.body.items[0].completed, 'sets "completed"').to.be.false;
             });
@@ -608,6 +639,7 @@ describe('API lists', () => {
                     item: loggedInUserList.items[0].id
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(500);
                 expect(res.text, 'sends expected text').to.equal('500');
             });
@@ -618,6 +650,7 @@ describe('API lists', () => {
                     items: loggedInUserList.items[0].id
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(404);
             });
 
@@ -644,6 +677,7 @@ describe('API lists', () => {
                     item: privateList.items[0].id
                 });
 
+                expect(res.ok).to.be.false;
                 expect(res.status, 'sends expected status').to.equal(401);
             });
 
@@ -653,6 +687,7 @@ describe('API lists', () => {
                     item: loggedInUserList.items[0].id
                 });
 
+                expect(res.ok).to.be.true;
                 expect(res.status, 'sends expected status').to.equal(200);
                 expect(res.body.items).to.have.lengthOf(0);
             });
@@ -762,7 +797,7 @@ describe('API lists', () => {
 
             it('responds with 500 if DB save error', async () => {
                 
-                // create a new user and list for that user
+                // create a new user
                 const user = fixtures.getUniqueUser(loggedInUser.user.email);
                 const { modelUser } = await helpers.createUser(user);
 
@@ -786,8 +821,8 @@ describe('API lists', () => {
                 const user = fixtures.getUniqueUser(loggedInUser.user.email);
                 const { modelUser } = await helpers.createUser(user);
 
-                sandbox.stub(User, 'populate').callsFake((model, opts, cb) => {
-                    expect(model.id).to.equal(loggedInUserList.id);
+                sandbox.stub(User, 'populate').callsFake((list, opts, cb) => {
+                    expect(list.id).to.equal(loggedInUserList.id);
                     expect(opts).to.deep.equal({ path: 'sharedUsers' });
                     cb('500', null);
                 });
@@ -804,7 +839,7 @@ describe('API lists', () => {
 
             it('responds with 200 and expected data if valid request', async () => {
 
-                // create a new user and list for that user
+                // create a new user
                 const user = fixtures.getUniqueUser(loggedInUser.user.email);
                 const { modelUser } = await helpers.createUser(user);
 
@@ -829,11 +864,129 @@ describe('API lists', () => {
 
             function createRequest (data) {
                 return request(app)
-                    .post(`/api/lists/${data.id}/shared`)
+                    .delete(`/api/lists/${data.id}/shared`)
                     .send(data.body)
                     .set('Cookie', [loggedInUser.cookie])
                     .set('Listr-CSRF-Token', loggedInUser.token);
             }
+
+            it('responds with 500 if missing required fields', async () => {
+                const res = await createRequest({
+                    id: ObjectId()
+                });
+
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(400);
+            });
+
+            it('responds with 500 if DB find list error', async () => {
+                const id = ObjectId().toString();
+
+                sandbox.stub(List, 'findById').callsFake((query, cb) => {
+                    expect(query, 'receives expected query').to.equal(id);
+                    cb('500', 500);
+                });
+
+                const res = await createRequest({
+                    id,
+                    body: { id: ObjectId() }
+                });
+
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(500);
+            });
+
+            it('responds with 404 if no list found', async () => {
+                const res = await createRequest({
+                    id: ObjectId(),
+                    body: { id: ObjectId() }
+                });
+
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(404);
+            });
+
+            it('responds with 401 if not an authorized user', async () => {
+
+                // create a new user and list for that user
+                const user = fixtures.getUniqueUser(loggedInUser.user.email);
+                const { modelUser } = await helpers.createUser(user);
+
+                const privateList = new List({
+                    createdBy: modelUser.id,
+                    title: 'privateList.title'
+                });
+                await privateList.save();
+
+                const res = await createRequest({
+                    id: privateList.id,
+                    body: { id: ObjectId() }
+                });
+
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(401);
+            });
+
+            it('responds with 500 if DB save error', async () => {
+                sandbox.stub(List.prototype, 'save').callsFake((cb) => {
+                    cb('500', null);
+                });
+
+                const res = await createRequest({
+                    id: loggedInUserList.id,
+                    body: { id: ObjectId() }
+                });
+
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(500);
+                expect(res.text, 'sends expected text').to.equal('500');
+            });
+
+            it('responds with 500 if DB populate error', async () => {
+
+                // create a new user
+                const user = fixtures.getUniqueUser(loggedInUser.user.email);
+                const { modelUser } = await helpers.createUser(user);
+
+                // add user to sharedUsers
+                loggedInUserList.sharedUsers.push(modelUser.id);
+                await loggedInUserList.save();
+
+                sandbox.stub(User, 'populate').callsFake((list, opts, cb) => {
+                    expect(list.id).to.equal(loggedInUserList.id);
+                    expect(opts).to.deep.equal({ path: 'sharedUsers' });
+                    cb('500', null);
+                });
+
+                const res = await createRequest({
+                    id: loggedInUserList.id,
+                    body: { id: modelUser.id }
+                });
+
+                expect(res.ok).to.be.false;
+                expect(res.status, 'sends expected status').to.equal(500);
+                expect(res.text, 'sends expected text').to.equal('500');
+            });
+
+            it('responds with 200 and expected data if valid request', async () => {
+
+                // create a new user
+                const user = fixtures.getUniqueUser(loggedInUser.user.email);
+                const { modelUser } = await helpers.createUser(user);
+
+                // add user to sharedUsers
+                loggedInUserList.sharedUsers.push(modelUser.id);
+                await loggedInUserList.save();
+
+                const res = await createRequest({
+                    id: loggedInUserList.id,
+                    body: { id: modelUser.id }
+                });
+
+                expect(res.ok).to.be.true;
+                expect(res.status, 'sends expected status').to.equal(200);
+                expect(res.body.sharedUsers).to.have.lengthOf(0);
+            });
         });
     });
 });

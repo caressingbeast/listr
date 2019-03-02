@@ -114,6 +114,7 @@ describe('API authentication middleware', () => {
 
         res.forEach((r) => {
             const route = `${r.req.method} ${r.req.path}`;
+            expect(res.ok).to.be.false;
             expect(r.status, `${route} sends expected status`).to.equal(401);
             expect(r.text, `${route} sends expected text`).to.equal('Unauthorized: no cookie');
         });
@@ -128,6 +129,7 @@ describe('API authentication middleware', () => {
 
         res.forEach((r) => {
             const route = `${r.req.method} ${r.req.path}`;
+            expect(res.ok).to.be.false;
             expect(r.status, `${route} sends expected status`).to.equal(401);
             expect(r.text, `${route} sends expected text`).to.equal('Unauthorized: no CSRF header');
         });
@@ -150,6 +152,7 @@ describe('API authentication middleware', () => {
 
         res.forEach((r) => {
             const route = `${r.req.method} ${r.req.path}`;
+            expect(res.ok).to.be.false;
             expect(r.status, `${route} sends expected status`).to.equal(500);
             expect(r.text, `${route} sends expected text`).to.equal('500');
         });
@@ -168,6 +171,7 @@ describe('API authentication middleware', () => {
 
         res.forEach((r) => {
             const route = `${r.req.method} ${r.req.path}`;
+            expect(res.ok).to.be.false;
             expect(r.status, `${route} sends expected status`).to.equal(401);
             expect(r.text, `${route} sends expected text`).to.equal('Unauthorized: invalid CSRF key');
         });

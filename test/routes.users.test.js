@@ -26,22 +26,27 @@ describe('API users', () => {
         await User.deleteMany({});
     });
 
-    describe('POST /api/users', () => {  
+    describe('POST /api/users', function () {
+
+        function createRequest (user) {
+            return request(app)
+                .post('/api/users')
+                .send(user);
+        }
     
         it('responds with 400 if missing required fields', async () => {
-            const res = await request(app)
-                .post('/api/users');
+            const res = await createRequest();
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(400);
         });
 
         it('responds with 500 if duplicate user', async () => {
             const { user } = await helpers.createUser();
 
-            const res = await request(app)
-                .post('/api/users')
-                .send(user);
+            const res = await createRequest(user);
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text.indexOf('duplicate key error index') > -1, 'sends expected text').to.be.true;
         });
@@ -49,10 +54,9 @@ describe('API users', () => {
         it('responds with 201 and expected data if valid request', async () => {
             const user = fixtures.getRandomUser();
 
-            const res = await request(app)
-                .post('/api/users')
-                .send(user);
+            const res = await createRequest(user);
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(201);
             expect(res.headers['set-cookie'][0], 'sends valid JWT cookie').to.be.a('string');
             expect(res.body.xsrfToken, 'sends xsrfToken').to.be.a('string');
@@ -64,51 +68,80 @@ describe('API users', () => {
             expect(savedUser.lastName, 'sets lastName').to.equal(user.lastName.trim());
             expect(savedUser.password, 'removes password').to.be.undefined;
 
-            // adds CSRF key to JWT
             const decoded = jwt.verify(res.body.token, config.SECRET_KEY);
             expect(decoded.xsrfToken, 'sets xsrfToken in JWT').to.equal(res.body.xsrfToken);
         });
     });
 
-    describe('GET /api/users/:user_id', () => {
+    describe('GET /api/users/:user_id', function () {
+
+        function createRequest (data) {
+            return request(app)
+                .get(`/api/users/${data.id}`)
+                .set('Cookie', [data.cookie])
+                .set('Listr-CSRF-Token', data.token);
+        }
+
+        it('responds with 401 if not an authorized user', async () => {
+            const { cookie, token } = await helpers.logInUser();
+
+            const res = await createRequest({
+                id: ObjectId(),
+                cookie,
+                token
+            });
+
+            expect(res.ok).to.be.false;
+            expect(res.status, 'sends expected status').to.equal(401);
+        });
 
         it('responds with 500 if DB find error', async () => {
             const { cookie, modelUser, token } = await helpers.logInUser();
 
-            sandbox.stub(User, 'findById').callsFake((id, cb) => {
-                expect(id).to.equal(modelUser.id);
-                cb('500', false);
+            sandbox.stub(User, 'findById').callsFake((query, cb) => {
+                expect(query, 'receives expected ID').to.equal(modelUser.id);
+                cb('500', null);
             });
 
-            const res = await request(app)
-                .get(`/api/users/${modelUser.id}`)
-                .set('Cookie', [cookie])
-                .set('Listr-CSRF-Token', token);
+            const res = await createRequest({
+                id: modelUser.id,
+                cookie,
+                token
+            });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
     
         it('responds with 404 if no user found', async () => {
-            const { cookie, token } = await helpers.logInUser();
+            const { cookie, modelUser, token } = await helpers.logInUser();
 
-            const res = await request(app)
-                .get(`/api/users/${ObjectId()}`)
-                .set('Cookie', [cookie])
-                .set('Listr-CSRF-Token', token);
+            await User.deleteMany({});
 
+            const res = await createRequest({
+                id: modelUser.id,
+                cookie,
+                token
+            });
+
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(404);
         });
 
         it('responds with 200 and expected data if valid request', async () => {
             const { cookie, modelUser, token } = await helpers.logInUser();
 
-            const res = await request(app)
-                .get(`/api/users/${modelUser.id}`)
-                .set('Cookie', [cookie])
-                .set('Listr-CSRF-Token', token);
+            const res = await createRequest({
+                id: modelUser.id,
+                cookie,
+                token
+            });
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(200);
+
+            // sends user
             expect(res.body.email).to.equal(modelUser.email);
             expect(res.body.firstName).to.equal(modelUser.firstName);
             expect(res.body.lastName).to.equal(modelUser.lastName);
@@ -135,6 +168,7 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(400);
         });
 
@@ -150,6 +184,7 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(401);
         });
 
@@ -168,6 +203,7 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -184,6 +220,7 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(404);
         });
 
@@ -201,7 +238,8 @@ describe('API users', () => {
                 token
             });
 
-            expect(res.status, 'sends expectd status').to.equal(500);
+            expect(res.ok).to.be.false;
+            expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
 
@@ -215,7 +253,10 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(200);
+
+            // sends user
             expect(res.body.email).to.equal(user.email.toLowerCase().trim());
             expect(res.body.firstName).to.equal(user.firstName.trim());
             expect(res.body.lastName).to.equal(user.lastName.trim());
@@ -240,6 +281,7 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(401);
         });
 
@@ -257,6 +299,7 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -272,10 +315,11 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(404);
         });
 
-        it('respond with 500 if DB remove error', async () => {
+        it('responds with 500 if DB remove error', async () => {
             const { cookie, modelUser, token } = await helpers.logInUser();
 
             sandbox.stub(User.prototype, 'remove').callsFake((cb) => {
@@ -288,6 +332,7 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.false;
             expect(res.status, 'sends expected status').to.equal(500);
             expect(res.text, 'sends expected text').to.equal('500');
         });
@@ -301,7 +346,10 @@ describe('API users', () => {
                 token
             });
 
+            expect(res.ok).to.be.true;
             expect(res.status, 'sends expected status').to.equal(200);
+
+            // sends deleted user
             expect(res.body.email).to.equal(modelUser.email);
             expect(res.body.firstName).to.equal(modelUser.firstName);
             expect(res.body.lastName).to.equal(modelUser.lastName);

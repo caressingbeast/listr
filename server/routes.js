@@ -126,6 +126,12 @@ module.exports = (app) => {
 
     // GET: get a user
     app.get('/api/users/:user_id', withAuth, function (req, res) {
+
+        // check for permission
+        if (req.params.user_id !== req.userId) {
+            return res.status(401).send('Unauthorized');
+        }
+
         User.findById(req.params.user_id, function (err, user) {
             if (err) {
                 return res.status(500).send(err);
@@ -361,8 +367,6 @@ module.exports = (app) => {
                 let item = list.items.find(function (i) {
                     return i.id === req.params.item_id;
                 });
-
-                console.log(item);
 
                 // no item so exit
                 if (!item) {
