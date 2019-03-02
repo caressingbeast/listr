@@ -24,90 +24,99 @@ describe('API auth', () => {
         await User.deleteMany({});
     });
 
-    describe('POST /api/auth/login', () => {
+    describe('POST /api/auth/login', function () {
+
+        function createRequest (body) {
+            return request(app)
+                .post('/api/auth/login')
+                .send(body);
+        }
 
         it('responds with 400 if missing required fields', async () => {
-            const res = await request(app)
-                .post('/api/auth/login');
+            const res = await createRequest();
 
-            expect(res.status, 'sends correct status').to.equal(400);
+            expect(res.ok).to.be.false;
+            expect(res.status, 'sends expected status').to.equal(400);
         });
 
         it('responds with 500 if find error', async () => {
             const user = fixtures.getRandomUser();
 
-            sandbox.stub(User, 'findOne').returns({
-                select: function () {
-                    return {
-                        exec: function (cb) {
-                            return cb('500', null);
-                        }
-                    };
-                }
+            sandbox.stub(User, 'findOne').callsFake((query) => {
+                expect(query.email, 'receives expected query').to.equal(user.email);
+
+                return {
+                    select: (str) => {
+                        return {
+                            exec: (cb) => {
+                                expect(str, 'selects password').to.equal('+password');
+                                cb('500', null);
+                            }
+                        };
+                    }
+                };
             });
 
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({
-                    email: user.email,
-                    password: user.password
-                });
+            const res = await createRequest({
+                email: user.email,
+                password: user.password
+            });
 
-            expect(res.status, 'sends correct status').to.equal(500);
+            expect(res.ok).to.be.false;
+            expect(res.status, 'sends expected status').to.equal(500);
         });
 
         it('responds with 404 if no user found', async () => {
             const user = fixtures.getRandomUser();
 
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({
-                    email: user.email,
-                    password: user.password
-                });
+            const res = await createRequest({
+                email: user.email,
+                password: user.password
+            });
 
-            expect(res.status, 'sends correct status').to.equal(404);
+            expect(res.ok).to.be.false;
+            expect(res.status, 'sends expected status').to.equal(404);
         });
 
         it('responds with 500 if password verification error', async () => {
             const { user } = await helpers.createUser();
 
             sandbox.stub(User.prototype, 'isCorrectPassword').callsFake((password, cb) => {
-                expect(password, 'receives password').to.equal(user.password);
+                expect(password, 'receives expected password').to.equal(user.password);
                 cb('500', null);
             });
 
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({
-                    email: user.email,
-                    password: user.password
-                });
+            const res = await createRequest({
+                email: user.email,
+                password: user.password
+            });
 
-            expect(res.status, 'sends correct status').to.equal(500);
+            expect(res.ok).to.be.false;
+            expect(res.status, 'sends expected status').to.equal(500);
         });
 
         it('responds with 401 if invalid password', async () => {
             const { user } = await helpers.createUser();
 
-            const res = await request(app)
-                .post('/api/auth/login')
-                .send({
-                    email: user.email,
-                    password: 'invalid'
-                });
+            const res = await createRequest({
+                email: user.email,
+                password: 'invalid'
+            });
 
-            expect(res.status, 'sends correct status').to.equal(401);
+            expect(res.ok).to.be.false;
+            expect(res.status, 'sends expected status').to.equal(401);
         });
 
         it('responds with 200 and expected data if valid request', async () => {
             const { modelUser, res } = await helpers.logInUser();
             const token = res.body.token;
 
-            expect(res.status, 'sends correct status').to.equal(200);
+            expect(res.ok).to.be.true;
+            expect(res.status, 'sends expected status').to.equal(200);
+
             expect(res.body.id, 'sends user ID').to.equal(modelUser.id);
-            expect(token, 'sends valid token').to.be.a('string');
-            expect(res.body.xsrfToken, 'sends valid xsrfToken').to.be.a('string');
+            expect(token, 'sends token').to.be.a('string');
+            expect(res.body.xsrfToken, 'sends xsrfToken').to.be.a('string');
 
             const cookies = res.headers['set-cookie'];
             expect(cookies, 'sends cookie').to.have.lengthOf(1);
@@ -122,14 +131,15 @@ describe('API auth', () => {
 
         it('responds with 200 and clears cookie', async () => {
             const { res } = await helpers.logInUser();
-
             const cookie = res.headers['set-cookie'][0];
 
             const logoutRes = await request(app)
                 .post('/api/auth/logout')
                 .set('Cookie', [cookie]);
 
-            expect(logoutRes.status, 'sends correct status').to.equal(200);
+            expect(res.ok).to.be.true;
+            expect(logoutRes.status, 'sends expected status').to.equal(200);
+
             expect(logoutRes.body.token, 'sends null token').to.be.null;
             expect(logoutRes.body.xsrfToken, 'sends null xsrfToken').to.be.null;
             expect(logoutRes.headers['set-cookie'][0], 'clears cookie').to.not.equal(cookie);
@@ -146,7 +156,9 @@ describe('API auth', () => {
                 .set('Cookie', [cookie])
                 .set('Listr-CSRF-Token', token);
 
-            expect(res.status).to.equal(200);
+            expect(res.ok).to.be.true;
+            expect(res.status, 'sends expected status').to.equal(200);
+
             expect(res.body.id).to.equal(modelUser.id);
         });
     });
