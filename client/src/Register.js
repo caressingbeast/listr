@@ -32,7 +32,7 @@ class Register extends Component {
         const state = this.state;
 
         return (
-            <div className="register">
+            <div className="Register">
                 <form onSubmit={(e) => this.onSubmit(e)}>
                     <fieldset>
                         <legend>Register</legend>
@@ -63,6 +63,7 @@ class Register extends Component {
         e.preventDefault();
 
         const state = this.state;
+
         const hasEmptyFields = Object.keys(state).filter((key) => {
             return key !== 'error' && !state[key];
         }).length > 0;
@@ -82,6 +83,7 @@ class Register extends Component {
                 return res.json();
             }
         }).then((json) => {
+            console.log(json);
             AuthService.setToken(json.xsrfToken);
             AuthService.setUser(json.id);
             this.props.history.push('/dashboard');
