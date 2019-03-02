@@ -56,8 +56,8 @@ class Login extends Component {
                 return res.json();
             }
         }).then((json) => {
-            AuthService.setUser(json.id);
             AuthService.setToken(json.xsrfToken);
+            AuthService.setUser(json.id);
 
             const { from } = this.props.location.state || { from: { pathname: '/dashboard' } };
 

@@ -42,7 +42,6 @@ module.exports = (app) => {
             return res.status(400).send('Bad Request');
         }
 
-        // find the user
         User.findOne({ email }).select('+password').exec(function (err, user) {
             if (err) {
                 return res.status(500).send(err);
@@ -58,6 +57,7 @@ module.exports = (app) => {
                     return res.status(500).send(err);
                 }
 
+                // invalid password
                 if (!success) {
                     return res.status(401).send('Unauthorized');
                 }

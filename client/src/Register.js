@@ -82,8 +82,8 @@ class Register extends Component {
                 return res.json();
             }
         }).then((json) => {
-            AuthService.setUser(json.id);
             AuthService.setToken(json.xsrfToken);
+            AuthService.setUser(json.id);
             this.props.history.push('/dashboard');
         });
     }
