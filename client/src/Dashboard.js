@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
-import ApiHelper from './helpers/api';
-import AuthService from './services/auth';
+import ApiService from './services/api';
 
 class Dashboard extends Component {
 
@@ -20,23 +19,10 @@ class Dashboard extends Component {
     }
 
     async componentDidMount () {
-        const user = await AuthService.fetchUser();
+        const listData = await ApiService.fetchLists();
+        const user = await ApiService.fetchUser();
 
-        const opts = ApiHelper.generateOpts({
-            credentials: true,
-            method: 'GET',
-            token: AuthService.getToken()
-        });
-
-        const listData = await fetch('/api/lists', opts).then((res) => {
-            if (res.ok) {
-                return res.json();
-            }
-
-            return null;
-        });
-
-        if (listData) {
+        if (listData && user) {
             this.setState({
                 lists: listData.lists,
                 sharedLists: listData.sharedLists,
@@ -56,18 +42,22 @@ class Dashboard extends Component {
         const lists = state.lists;
         const sharedLists = state.sharedLists;
 
+        if (!lists || !sharedLists) {
+            return null;
+        }
+
         return (
             <div className="Dashboard">
                 <h1>{user.firstName ? `${user.firstName}'s Lists` : 'My Lists'}</h1>
                 {lists.length === 0 && <p>You currently have no lists. Click <strong>Create list</strong> below to add one.</p>}
                 {lists.length > 0 && 
-                    <ul className="list-container">
+                    <ul className="list-container lists">
                         {lists.map((l, i) => {
                             return (
                                 <li key={l._id}>
                                     <Link to={`/lists/${l._id}`}>
                                         <span>{l.title} ({l.items.length})</span>
-                                        {l.shared_users.length > 0 && <small className="button neutral small pull-right">shared</small>}
+                                        {l.sharedUsers.length > 0 && <small className="button neutral small pull-right">shared</small>}
                                     </Link>
                                 </li>
                             );
@@ -92,7 +82,7 @@ class Dashboard extends Component {
                     <React.Fragment>
                         <hr />
                         <h2>Shared Lists</h2>
-                        <ul className="list-container">
+                        <ul className="list-container sharedLists">
                             {sharedLists.map((l, i) => {
                                 return (
                                     <li key={l._id}>
@@ -109,35 +99,25 @@ class Dashboard extends Component {
         );
     }
 
-    createList (e) {
+    async createList (e) {
         e.preventDefault();
 
         let state = this.state;
+        let title = state.title.trim();
 
-        if (!state.title) {
-            this.setState({ error: true });
-            return false;
+        if (!title) {
+            return this.setState({ error: true });
         }
 
-        const opts = ApiHelper.generateOpts({
-            body: { title: state.title },
-            credentials: true,
-            token: AuthService.getToken()
-        });
+        const res = await ApiService.createList(title);
 
-        fetch('/api/lists', opts).then((res) => {
-            if (res.ok) {
-                return res.json();
-            }
-        }).then((json) => {
+        console.log(res);
+
+        if (res) {
             let lists = state.lists;
-
-            lists.push(json);
-
+            lists.push(res);
             this.setState({ lists, showForm: false });
-        }).catch((err) => {
-            window.console && window.console.error(err);
-        });
+        }
     }
 
     handleInputChange (e) {

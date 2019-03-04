@@ -39,7 +39,7 @@ if (NODE_ENV === 'production') {
 }
 
 app.get('*', function (req, res) {
-    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+    res.sendFile(path.resolve(__dirname, 'client', 'index.html'));
 });
 
 let port = process.env.PORT || 5000;

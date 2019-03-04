@@ -1,5 +1,3 @@
-import ApiHelper from '../helpers/api';
-
 class AuthService {
 
     clearToken () {
@@ -8,26 +6,6 @@ class AuthService {
 
     clearUser () {
         localStorage.removeItem('lid');
-    }
-
-    fetchUser () {
-        const opts = ApiHelper.generateOpts({
-            credentials: true,
-            method: 'GET',
-            token: this.getToken()
-        });
-
-        return fetch(`/api/users/${this.getUser()}`, opts)
-            .then((res) => {
-                if (res.ok) {
-                    return res.json();
-                }
-
-                return null;
-            }).catch((err) => {
-                window.console && window.console.error(err);
-                return null;
-            });
     }
 
     getToken () {
@@ -43,7 +21,7 @@ class AuthService {
     }
 
     setUser (id) {
-        localStorage.setItem('lid', id)
+        localStorage.setItem('lid', id);
     }
 
     setToken (token) {

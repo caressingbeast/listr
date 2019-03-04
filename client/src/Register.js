@@ -72,7 +72,7 @@ class Register extends Component {
             return this.setState({ error: true });
         }
 
-        fetch('/api/users', {
+        return fetch('/api/users', {
             method: 'POST',
             body: JSON.stringify(this.state),
             headers: {
@@ -83,7 +83,6 @@ class Register extends Component {
                 return res.json();
             }
         }).then((json) => {
-            console.log(json);
             AuthService.setToken(json.xsrfToken);
             AuthService.setUser(json.id);
             this.props.history.push('/dashboard');
