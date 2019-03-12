@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+
+import ApiService from './services/api';
 import AuthService from './services/auth';
 
 const inputs = [
@@ -72,19 +74,7 @@ class Register extends Component {
             return this.setState({ error: true });
         }
 
-        return fetch('/api/users', {
-            method: 'POST',
-            body: JSON.stringify(this.state),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            if (res.ok) {
-                return res.json();
-            }
-        }).then((json) => {
-            AuthService.setToken(json.xsrfToken);
-            AuthService.setUser(json.id);
+        return ApiService.createUser(this.state).then(() => {
             this.props.history.push('/dashboard');
         });
     }

@@ -1,7 +1,7 @@
 class AuthService {
 
     clearToken () {
-        localStorage.removeItem('x_token');
+        localStorage.removeItem('lxt');
     }
 
     clearUser () {
@@ -9,7 +9,7 @@ class AuthService {
     }
 
     getToken () {
-        return localStorage.getItem('x_token');
+        return localStorage.getItem('lxt');
     }
 
     getUser () {
@@ -25,7 +25,7 @@ class AuthService {
     }
 
     setToken (token) {
-        localStorage.setItem('x_token', token);
+        localStorage.setItem('lxt', token);
     }
 }
 

@@ -19,8 +19,7 @@ class Dashboard extends Component {
     }
 
     async componentDidMount () {
-        const listData = await ApiService.fetchLists();
-        const user = await ApiService.fetchUser();
+        const { listData, user } = await this.loadData();
 
         if (listData && user) {
             this.setState({
@@ -29,6 +28,16 @@ class Dashboard extends Component {
                 user
             });
         }
+    }
+
+    async loadData () {
+        const listData = await ApiService.fetchLists();
+        const user = await ApiService.fetchUser();
+
+        return {
+            listData,
+            user
+        };
     }
 
     render () {
@@ -48,7 +57,7 @@ class Dashboard extends Component {
 
         return (
             <div className="Dashboard">
-                <h1>{user.firstName ? `${user.firstName}'s Lists` : 'My Lists'}</h1>
+                <h1>{`${user.firstName}'s Lists`}</h1>
                 {lists.length === 0 && <p>You currently have no lists. Click <strong>Create list</strong> below to add one.</p>}
                 {lists.length > 0 && 
                     <ul className="list-container lists">
@@ -111,12 +120,10 @@ class Dashboard extends Component {
 
         const res = await ApiService.createList(title);
 
-        console.log(res);
-
         if (res) {
             let lists = state.lists;
             lists.push(res);
-            this.setState({ lists, showForm: false });
+            this.setState({ lists, showForm: false, title: '' });
         }
     }
 
